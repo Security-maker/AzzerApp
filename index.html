@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Azzera Protect - App</title>
+
+    <meta name="theme-color" content="#141c25">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Azzera Pro">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Couleurs Charte Graphique */
+            --obsidian: #141c25;
+            --white: #ffffff;
+            --azur: #64d0ff;
+            --grey: #4C4C4C;
+            
+            /* Couleurs fonctionnelles (Flat design sans dégradé) */
+            --alert-red: #D92525;
+            --status-green: #27A644;
+            --status-orange: #E58A00;
+            
+            /* UI */
+            --card-bg: rgba(255, 255, 255, 0.05); /* Fond subtil sur l'obsidian sans utiliser d'ombres */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Montserrat', sans-serif; /* Application de la police officielle */
+        }
+
+        body {
+            background-color: var(--obsidian);
+            color: var(--white);
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- TYPOGRAPHIE ET HIÉRARCHIE --- */
+        h1, h2, h3, .uppercase-title {
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        p, .body-text {
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        /* --- VUES --- */
+        .view {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            animation: fadeIn 0.3s ease;
+        }
+        .view.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- EN-TÊTE COMMUN (Style Logo Alternatif) --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--grey);
+        }
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .brand-logo-ap {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--azur);
+            letter-spacing: -2px;
+        }
+        .brand-text-block {
+            display: flex;
+            flex-direction: column;
+        }
+        .brand-text-main { 
+            font-size: 16px; 
+            font-weight: 800; 
+            letter-spacing: 1.5px;
+            line-height: 1;
+        }
+        .brand-text-sub { 
+            font-size: 9px; 
+            font-weight: 700; 
+            letter-spacing: 2px;
+            color: var(--azur);
+            margin-top: 4px;
+        }
+        .logout-btn { color: var(--grey); font-weight: 600; font-size: 12px; cursor: pointer; text-transform: uppercase; }
+
+        /* --- ÉCRAN CONNEXION --- */
+        .login-container {
+            flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
+        }
+        .login-slogan {
+            text-align: center; font-weight: 300; font-size: 18px; line-height: 1.4; margin-bottom: 40px; color: var(--white);
+        }
+        .login-slogan strong { font-weight: 600; color: var(--azur); }
+        
+        .btn-login {
+            width: 100%; padding: 18px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; cursor: pointer; transition: transform 0.1s;
+        }
+        .btn-login-agent { background-color: var(--card-bg); color: var(--white); border: 1px solid var(--grey); }
+        .btn-login-boss { background-color: var(--azur); color: var(--obsidian); } /* Texte sombre sur fond Azur pour le contraste */
+        .btn-login-agent:active, .btn-login-boss:active { transform: scale(0.98); }
+
+        /* --- COMPOSANTS UI (Flat, sans ombres) --- */
+        .section-title { font-size: 12px; color: var(--azur); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; margin-top: 25px; }
+        .card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        
+        .action-card {
+            background-color: var(--card-bg); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: background-color 0.2s;
+        }
+        .action-card:active { background-color: rgba(100, 208, 255, 0.1); border-color: var(--azur); }
+        .action-icon { font-size: 28px; margin-bottom: 12px; }
+        .action-title { font-size: 12px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+
+        .btn-primary {
+            background-color: var(--azur); color: var(--obsidian); border: none; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+        }
+        
+        .btn-sos {
+            background-color: var(--alert-red); color: var(--white); width: 100%; padding: 20px; border-radius: 8px; font-size: 16px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .btn-sos:active { background-color: #A01B1B; }
+
+        /* Status & Badges */
+        .status-badge { padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border: 1px solid; }
+        .status-green { background-color: transparent; color: var(--status-green); border-color: var(--status-green); }
+        .status-orange { background-color: transparent; color: var(--status-orange); border-color: var(--status-orange); }
+
+        /* --- LISTE AGENTS (SUPERVISION) --- */
+        .agent-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--grey); }
+        .agent-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .agent-info h4 { font-size: 14px; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .agent-info p { font-size: 12px; color: var(--grey); font-weight: 500; }
+        .agent-actions { display: flex; gap: 10px; }
+        .btn-icon { background-color: var(--card-bg); border: 1px solid var(--grey); width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 16px; cursor: pointer; color: var(--white); }
+        .btn-icon.locate { border-color: var(--azur); color: var(--azur); }
+
+        /* --- MODALES --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 28, 37, 0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background-color: var(--obsidian); width: 100%; max-width: 500px; border-radius: 12px; border: 1px solid var(--grey); overflow: hidden; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--grey); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 14px; color: var(--azur); }
+        .btn-close { background: none; border: none; color: var(--grey); font-size: 28px; cursor: pointer; font-weight: 300; }
+        .modal-body { padding: 20px; }
+
+        /* Styles spécifiques Radar/Plan */
+        .map-container { width: 100%; height: 250px; background-color: #0c1117; border-radius: 8px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; border: 1px solid var(--grey); }
+        .radar { width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(100, 208, 255, 0.3); position: relative; }
+        .radar::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 70%, rgba(100, 208, 255, 0.5) 100%); transform-origin: 0 0; animation: scan 2s linear infinite; }
+        .radar-dot { width: 12px; height: 12px; background-color: var(--azur); border-radius: 50%; position: absolute; top: 40%; left: 60%; }
+        @keyframes scan { 100% { transform: rotate(360deg) translate(-50%, -50%); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="view-login" class="view active">
+        <div class="login-container">
+            <div class="brand-container" style="margin-bottom: 40px; transform: scale(1.5);">
+                <div class="brand-logo-ap">A/P</div>
+                <div class="brand-text-block">
+                    <div class="brand-text-main">AZZERA PROTECT</div>
+                    <div class="brand-text-sub">SÉCURITÉ PRIVÉE</div>
+                </div>
+            </div>
+            
+            <h2 class="login-slogan">Anticiper vaut mieux qu'intervenir.<br><strong>Nous faisons les deux.</strong></h2>
+            
+            <div style="width: 100%; max-width: 400px; margin-top: 20px;">
+                <button class="btn-login btn-login-agent" onclick="showView('view-agent')">Portail Agent</button>
+                <button class="btn-login btn-login-boss" onclick="showView('view-boss')">Supervision (QG)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-agent" class="view">
+        <header>
+            <div class="brand-container">
+                <div class="brand-logo-ap">A/P</div>
+                <div class="brand-text-block">
+                    <div class="brand-text-main">AZZERA PROTECT</div>
+                    <div class="brand-text-sub">SÉCURITÉ PRIVÉE</div>
+                </div>
+            </div>
+            <div class="logout-btn" onclick="showView('view-login')">Quitter</div>
+        </header>
+
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="font-size: 14px; margin-bottom: 8px;">RÉSIDENCE LES OLIVIERS</h2>
+                <div class="status-badge status-orange" id="gps-status">GPS INACTIF</div>
+            </div>
+            <button class="btn-primary" id="btn-service" onclick="toggleService()">Démarrer</button>
+        </div>
+
+        <div class="section-title">Actions Opérationnelles</div>
+        <div class="grid-2">
+            <div class="action-card" onclick="alert('Module de saisie activé.')">
+                <div class="action-icon">📝</div>
+                <div class="action-title">Rapport</div>
+            </div>
+            <div class="action-card" onclick="openBlueprint()">
+                <div class="action-icon">🗺️</div>
+                <div class="action-title">Plan site</div>
+            </div>
+            <div class="action-card" onclick="alert('Ouverture du protocole stricte.')">
+                <div class="action-icon">📋</div>
+                <div class="action-title">Consignes</div>
+            </div>
+            <div class="action-card" onclick="alert('Lecteur NFC / QR activé pour point de ronde.')">
+                <div class="action-icon">📍</div>
+                <div class="action-title">Scan Ronde</div>
+            </div>
+        </div>
+
+        <div style="margin-top: auto;">
+            <button class="btn-sos" onclick="triggerSOS()">Alerte Critique (PTI)</button>
+        </div>
+    </div>
+
+    <div id="view-boss" class="view">
+        <header>
+            <div class="brand-container">
+                <div class="brand-logo-ap">A/P</div>
+                <div class="brand-text-block">
+                    <div class="brand-text-main">AZZERA PROTECT</div>
+                    <div class="brand-text-sub">CENTRE DE CONTRÔLE</div>
+                </div>
+            </div>
+            <div class="logout-btn" onclick="showView('view-login')">Déconnexion</div>
+        </header>
+
+        <div class="grid-2">
+            <div class="card" style="margin-bottom: 0;">
+                <p style="color: var(--grey); font-size: 10px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px;">EFFECTIF ACTIF</p>
+                <h2 style="font-size: 24px; color: var(--status-green);">3 AGENTS</h2>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <p style="color: var(--grey); font-size: 10px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px;">INCIDENTS (24H)</p>
+                <h2 style="font-size: 24px; color: var(--white);">0</h2>
+            </div>
+        </div>
+
+        <div class="section-title">Télémétrie & Supervision</div>
+        <div class="card">
+            <div class="agent-row">
+                <div class="agent-info">
+                    <h4>DUPONT J. <span class="status-badge status-green" style="margin-left: 8px;">EN LIGNE</span></h4>
+                    <p>RÉSIDENCE LES OLIVIERS • 20H00</p>
+                </div>
+                <div class="agent-actions">
+                    <button class="btn-icon locate" onclick="openLocationMap('DUPONT J.', 'RÉSIDENCE LES OLIVIERS')">📍</button>
+                    <button class="btn-icon" onclick="openBlueprint()">🗺️</button>
+                </div>
+            </div>
+            <div class="agent-row">
+                <div class="agent-info">
+                    <h4>MARTIN L. <span class="status-badge status-green" style="margin-left: 8px;">EN LIGNE</span></h4>
+                    <p>CHANTIER BTP SUD • 19H30</p>
+                </div>
+                <div class="agent-actions">
+                    <button class="btn-icon locate" onclick="openLocationMap('MARTIN L.', 'CHANTIER BTP SUD')">📍</button>
+                    <button class="btn-icon" onclick="openBlueprint()">🗺️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-map">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="map-modal-title">POSITION SATELLITE</h3>
+                <button class="btn-close" onclick="closeModal('modal-map')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="map-container">
+                    <div class="radar">
+                        <div class="radar-dot"></div>
+                    </div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: var(--azur); background: var(--obsidian); padding: 4px 8px; border: 1px solid var(--azur);">
+                        LAT: 43.456 | LON: 6.689
+                    </div>
+                </div>
+                <button style="width: 100%; padding: 15px; border-radius: 8px; background: var(--card-bg); color: var(--white); border: 1px solid var(--grey); font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase;" onclick="closeModal('modal-map'); openBlueprint();">
+                    Afficher Plan Architecture
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-blueprint">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>CARTOGRAPHIE SITE</h3>
+                <button class="btn-close" onclick="closeModal('modal-blueprint')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="map-container" style="background-image: linear-gradient(rgba(100, 208, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 208, 255, 0.1) 1px, transparent 1px); background-size: 20px 20px; flex-direction: column;">
+                    <span style="font-size: 40px; margin-bottom: 10px;">🏗️</span>
+                    <p style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--azur);">PLAN_OLIVIERS.PDF</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        let isWorking = false;
+        function toggleService() {
+            const btn = document.getElementById('btn-service');
+            const badge = document.getElementById('gps-status');
+            
+            if ("vibrate" in navigator) navigator.vibrate(30);
+
+            isWorking = !isWorking;
+            if (isWorking) {
+                btn.innerText = "CLÔTURER";
+                btn.style.backgroundColor = "transparent";
+                btn.style.border = "1px solid var(--grey)";
+                btn.style.color = "var(--white)";
+                
+                badge.className = "status-badge status-green";
+                badge.innerText = "GPS ACTIF";
+            } else {
+                if(confirm("Confirmer la clôture de la vacation ?")) {
+                    btn.innerText = "DÉMARRER";
+                    btn.style.backgroundColor = "var(--azur)";
+                    btn.style.border = "none";
+                    btn.style.color = "var(--obsidian)";
+                    
+                    badge.className = "status-badge status-orange";
+                    badge.innerText = "GPS INACTIF";
+                } else {
+                    isWorking = true;
+                }
+            }
+        }
+
+        function triggerSOS() {
+            if ("vibrate" in navigator) navigator.vibrate([400, 200, 400, 200, 400]);
+            alert("PROTOCOLE D'URGENCE ACTIVÉ.");
+        }
+
+        function openLocationMap(agentName, siteName) {
+            document.getElementById('map-modal-title').innerText = `CIBLE : ${agentName}`;
+            document.getElementById('modal-map').style.display = 'flex';
+        }
+
+        function openBlueprint() {
+            document.getElementById('modal-map').style.display = 'none';
+            document.getElementById('modal-blueprint').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+</body>
+</html>
