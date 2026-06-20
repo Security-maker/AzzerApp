@@ -22,7 +22,7 @@
             --grey: #4C4C4C;
             --light-grey: #a0a5ac;
             
-            /* Couleurs fonctionnelles strictes (Flat design sans dégradé ni ombre) */
+            /* Couleurs fonctionnelles strictes */
             --alert-red: #D92525;
             --status-green: #27A644;
             --status-orange: #E58A00;
@@ -54,26 +54,12 @@
             flex-direction: column;
         }
 
-        /* --- TYPOGRAPHIE RIGUREUSE --- */
-        h1, h2, h3, h4, .uppercase-title {
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 700;
-        }
-
-        p, .body-text {
-            font-weight: 400;
-            line-height: 1.5;
-            color: var(--white);
-        }
+        /* --- TYPOGRAPHIE --- */
+        h1, h2, h3, h4, .uppercase-title { text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+        p, .body-text { font-weight: 400; line-height: 1.5; color: var(--white); }
 
         /* --- VUES SÉPARÉES --- */
-        .view {
-            display: none;
-            flex-direction: column;
-            flex-grow: 1;
-            animation: viewFade 0.25s ease-out;
-        }
+        .view { display: none; flex-direction: column; flex-grow: 1; animation: viewFade 0.25s ease-out; }
         .view.active { display: flex; }
 
         @keyframes viewFade {
@@ -81,137 +67,58 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- BLOC LOGO RECONSTRUIT (CHARTE GRAPHIQUE) --- */
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .logo-wrapper {
-            position: relative;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .brand-logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            position: absolute;
-            z-index: 2;
-        }
-        .brand-logo-fallback {
-            width: 100%;
-            height: 100%;
-            fill: none;
-            stroke: var(--azur);
-            stroke-width: 2.5;
-            position: absolute;
-            z-index: 1;
-        }
-        .brand-text-block {
-            display: flex;
-            flex-direction: column;
-        }
-        .brand-text-main { 
-            font-size: 15px; 
-            font-weight: 800; 
-            letter-spacing: 1px;
-            line-height: 1.1;
-        }
-        .brand-text-sub { 
-            font-size: 9px; 
-            font-weight: 700; 
-            letter-spacing: 1.8px;
-            color: var(--azur);
-            margin-top: 2px;
-        }
+        /* --- BLOC LOGO --- */
+        .brand-container { display: flex; align-items: center; gap: 12px; }
+        .logo-wrapper { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+        .brand-logo-img { width: 100%; height: 100%; object-fit: contain; position: absolute; z-index: 2; }
+        .brand-logo-fallback { width: 100%; height: 100%; fill: none; stroke: var(--azur); stroke-width: 2.5; position: absolute; z-index: 1; }
+        .brand-text-block { display: flex; flex-direction: column; }
+        .brand-text-main { font-size: 15px; font-weight: 800; letter-spacing: 1px; line-height: 1.1; }
+        .brand-text-sub { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; color: var(--azur); margin-top: 2px; }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .logout-btn { color: var(--light-grey); font-weight: 600; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
 
         /* --- INTERFACE DE CONNEXION --- */
-        .login-container {
-            flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;
-        }
-        .login-slogan {
-            text-align: center; font-weight: 300; font-size: 16px; line-height: 1.5; margin-bottom: 45px; color: var(--white);
-            letter-spacing: 0.5px;
-        }
+        .login-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
+        .login-slogan { text-align: center; font-weight: 300; font-size: 16px; line-height: 1.5; margin-bottom: 45px; color: var(--white); letter-spacing: 0.5px; }
         .login-slogan strong { font-weight: 600; color: var(--azur); }
         
-        .login-form-box {
-            width: 100%; max-width: 360px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px;
-        }
+        .login-form-box { width: 100%; max-width: 360px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--azur); margin-bottom: 6px; letter-spacing: 1px; }
-        .input-group input, .input-group select {
-            width: 100%; padding: 14px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: white; font-size: 14px; outline: none;
-        }
+        .input-group input, .input-group select { width: 100%; padding: 14px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: white; font-size: 14px; outline: none; }
         .input-group input:focus, .input-group select:focus { border-color: var(--azur); }
 
-        .btn-submit {
-            width: 100%; padding: 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; background-color: var(--azur); color: var(--obsidian);
-        }
+        .btn-submit { width: 100%; padding: 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; background-color: var(--azur); color: var(--obsidian); }
 
-        /* --- COMPOSANTS DE STRUCTURE FLAT --- */
+        /* --- COMPOSANTS UI --- */
         .section-title { font-size: 11px; color: var(--azur); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; margin-top: 20px; }
         .card { background-color: var(--card-bg); border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         
-        /* Cartes d'action tactiles */
-        .action-card {
-            background-color: var(--card-bg); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--border-color); transition: background-color 0.15s;
-        }
+        .action-card { background-color: var(--card-bg); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--border-color); transition: background-color 0.15s; }
         .action-card:active { background-color: rgba(100, 208, 255, 0.08); border-color: var(--azur); }
         .action-icon { font-size: 26px; margin-bottom: 10px; }
         .action-title { font-size: 11px; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Boutons de commande */
         .btn-flat-primary { background-color: var(--azur); color: var(--obsidian); border: none; padding: 12px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
-        .btn-flat-secondary { background-color: transparent; color: var(--white); border: 1px solid var(--grey); padding: 12px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
+        .btn-emergency { background-color: var(--alert-red); color: var(--white); width: 100%; padding: 18px; border-radius: 8px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin-top: auto; }
         
-        .btn-emergency {
-            background-color: var(--alert-red); color: var(--white); width: 100%; padding: 18px; border-radius: 8px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin-top: auto;
-        }
-        .btn-emergency:active { background-color: #b01e1e; }
-
-        /* Badges de contrôle */
         .badge { padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border: 1px solid; }
         .badge-green { background-color: transparent; color: var(--status-green); border-color: var(--status-green); }
         .badge-orange { background-color: transparent; color: var(--status-orange); border-color: var(--status-orange); }
-        .badge-grey { background-color: transparent; color: var(--light-grey); border-color: var(--grey); }
 
-        /* --- INTERFACE DE SUPERVISION (QG) --- */
+        /* --- SUPERVISION (QG) --- */
         .metrics-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .metric-box { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; text-align: center; }
         .metric-value { font-size: 20px; font-weight: 800; color: var(--white); margin-top: 4px; }
-        .metric-box.alert .metric-value { color: var(--alert-red); }
 
-        .list-container { display: flex; flex-direction: column; gap: 8px; }
-        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; }
-        .list-row-info h4 { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
-        .list-row-info p { font-size: 11px; color: var(--light-grey); margin-top: 3px; }
-        .list-row-actions { display: flex; gap: 8px; }
-        
-        .btn-action-icon { background-color: var(--input-bg); border: 1px solid var(--border-color); width: 36px; height: 36px; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 14px; cursor: pointer; color: var(--white); }
-        .btn-action-icon:active { border-color: var(--azur); }
-
-        /* Flux d'événements en direct (MCI) */
-        .live-log-box { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .live-log-box { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .log-entry { font-size: 11px; padding: 8px; border-left: 2px solid var(--grey); background-color: rgba(255,255,255,0.01); display: flex; justify-content: space-between; }
         .log-entry.critical { border-left-color: var(--alert-red); background-color: rgba(217, 37, 37, 0.05); }
 
-        /* --- MODALES PLATES --- */
+        /* --- MODALES --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 28, 37, 0.96); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background-color: var(--obsidian); width: 100%; max-width: 460px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .modal-header { padding: 18px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
@@ -219,19 +126,8 @@
         .modal-close { background: none; border: none; color: var(--light-grey); font-size: 24px; cursor: pointer; }
         .modal-body { padding: 20px; }
 
-        /* Cartographie et radar */
-        .map-viewport { width: 100%; height: 240px; background-color: #0b1116; border-radius: 8px; border: 1px solid var(--border-color); position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        .radar-screen { width: 110px; height: 110px; border-radius: 50%; border: 1px solid rgba(100, 208, 255, 0.2); position: relative; }
-        .radar-screen::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 0deg, transparent 60%, rgba(100, 208, 255, 0.4) 100%); transform-origin: 0 0; animation: radarSweep 2.5s linear infinite; }
-        .radar-target { width: 10px; height: 10px; background-color: var(--azur); border-radius: 50%; position: absolute; top: 35%; left: 55%; }
-        @keyframes radarSweep { 100% { transform: rotate(360deg) translate(-50%, -50%); } }
-
-        .blueprint-grid { width: 100%; height: 240px; background-color: #0c1824; border-radius: 8px; border: 1px solid var(--azur); position: relative; background-image: linear-gradient(rgba(100, 208, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 208, 255, 0.08) 1px, transparent 1px); background-size: 15px 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-
-        /* Menu de catégories rapides */
-        .category-pill { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-align: center; }
+        .category-pill { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-align: center; transition: border-color 0.2s, color 0.2s; }
         .category-pill.active { border-color: var(--azur); color: var(--azur); }
-
     </style>
 </head>
 <body>
@@ -263,7 +159,7 @@
                     <label>Mot de passe</label>
                     <input type="password" id="input-password" placeholder="••••••••">
                 </div>
-                <button class="btn-submit" onclick="processLogin()">Authentification</button>
+                <button class="btn-submit" onclick="window.processLogin()">Authentification</button>
             </div>
         </div>
     </div>
@@ -282,7 +178,7 @@
                     <div class="brand-text-sub">PORTAIL AGENT</div>
                 </div>
             </div>
-            <div class="logout-btn" onclick="triggerLogout()">Quitter</div>
+            <div class="logout-btn" onclick="window.triggerLogout()">Quitter</div>
         </header>
 
         <div class="card">
@@ -291,41 +187,27 @@
                 <select id="agent-site-selector">
                     <option value="Résidence Les Oliviers">Résidence Les Oliviers</option>
                     <option value="Chantier BTP Plein Sud">Chantier BTP Plein Sud</option>
-                    <option value="Zone Industrielle Ouest">Zone Industrielle Ouest</option>
                 </select>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
                 <div class="badge badge-orange" id="agent-gps-badge">GPS Disconnect</div>
-                <button class="btn-flat-primary" id="btn-agent-service" onclick="toggleAgentService()">Prendre Poste</button>
+                <button class="btn-flat-primary" id="btn-agent-service" onclick="window.toggleAgentService()">Prendre Poste</button>
             </div>
         </div>
 
         <div class="section-title">Opérations de terrain</div>
         <div class="grid-2">
-            <div class="action-card" onclick="openAgentReportModal()">
+            <div class="action-card" onclick="window.openAgentReportModal()">
                 <div class="action-icon">📝</div>
                 <div class="action-title">Main Courante</div>
             </div>
-            <div class="action-card" onclick="openBlueprintModal('Résidence Les Oliviers')">
+            <div class="action-card" onclick="alert('Module Plan en développement')">
                 <div class="action-icon">🗺️</div>
                 <div class="action-title">Plan du site</div>
             </div>
-            <div class="action-card" onclick="openInstructionModal()">
-                <div class="action-icon">📋</div>
-                <div class="action-title">Consignes</div>
-            </div>
-            <div class="action-card" onclick="startPatrolSimulation()">
-                <div class="action-icon">📍</div>
-                <div class="action-title">Ronde NFC</div>
-            </div>
         </div>
 
-        <div class="action-card" style="flex-direction: row; justify-content: center; gap: 10px; padding: 15px; border-color: #25D366; margin-bottom: 15px;" onclick="dispatchWhatsApp()">
-            <span style="font-size: 18px;">💬</span>
-            <span class="action-title" style="color: #25D366;">Canal Profil Azzera</span>
-        </div>
-
-        <button class="btn-emergency" onclick="triggerCriticalSOS()">🚨 Signal SOS PTI</button>
+        <button class="btn-emergency" onclick="window.triggerCriticalSOS()">🚨 Signal SOS PTI</button>
     </div>
 
     <div id="view-boss" class="view">
@@ -342,103 +224,13 @@
                     <div class="brand-text-sub">CENTRE DE CONTRÔLE</div>
                 </div>
             </div>
-            <div class="logout-btn" onclick="triggerLogout()">Déconnexion</div>
+            <div class="logout-btn" onclick="window.triggerLogout()">Déconnexion</div>
         </header>
 
-        <div class="metrics-row">
-            <div class="metric-box">
-                <p style="color: var(--light-grey); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;">EN POSTE</p>
-                <div class="metric-value" style="color: var(--status-green);" id="count-active-agents">2</div>
-            </div>
-            <div class="metric-box">
-                <p style="color: var(--light-grey); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;">SITES ACTIFS</p>
-                <div class="metric-value">3</div>
-            </div>
-            <div class="metric-box alert" id="metric-incident-box">
-                <p style="color: var(--light-grey); font-size: 9px; font-weight: 700; letter-spacing: 0.5px;">ALERTES 24H</p>
-                <div class="metric-value" id="count-alerts">0</div>
-            </div>
-        </div>
-
-        <div class="section-title">Événements en direct (MCI)</div>
+        <div class="section-title">Base de données : Événements en direct</div>
         <div class="card" style="padding: 12px;">
             <div class="live-log-box" id="live-log-container">
-                <div class="log-entry"><span>[16:45] - DUPONT J. : Prise de poste validée</span><span style="color: var(--status-green);">OK</span></div>
-                <div class="log-entry"><span>[15:30] - MARTIN L. : Ronde périphérique effectuée</span><span style="color: var(--light-grey);">RONDE</span></div>
-            </div>
-        </div>
-
-        <div class="section-title">Dispositif Opérationnel</div>
-        <div class="card" style="padding: 10px;">
-            <div class="list-container" id="boss-agents-list">
-                <div class="list-row">
-                    <div class="list-row-info">
-                        <h4>DUPONT J. <span class="badge badge-green" style="font-size: 8px; padding: 2px 5px; margin-left: 5px;">ACTIF</span></h4>
-                        <p>RÉSIDENCE LES OLIVIERS • Vol: 8h</p>
-                    </div>
-                    <div class="list-row-actions">
-                        <button class="btn-action-icon locate" onclick="openGpsTracking('DUPONT J.')">📍</button>
-                        <button class="btn-action-icon" onclick="openBlueprintModal('Résidence Les Oliviers')">🗺️</button>
-                    </div>
-                </div>
-                <div class="list-row">
-                    <div class="list-row-info">
-                        <h4>MARTIN L. <span class="badge badge-green" style="font-size: 8px; padding: 2px 5px; margin-left: 5px;">ACTIF</span></h4>
-                        <p>CHANTIER BTP PLEIN SUD • Vol: 12h</p>
-                    </div>
-                    <div class="list-row-actions">
-                        <button class="btn-action-icon locate" onclick="openGpsTracking('MARTIN L.')">📍</button>
-                        <button class="btn-action-icon" onclick="openBlueprintModal('Chantier BTP Plein Sud')">🗺️</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid-2">
-            <button class="btn-flat-secondary" onclick="openConfigModal('Agent')">+ Nouvel Agent</button>
-            <button class="btn-flat-secondary" onclick="openConfigModal('Site')">+ Nouveau Site</button>
-        </div>
-
-        <div class="section-title">Alerte descendante</div>
-        <div class="card" style="padding: 15px; display: flex; gap: 10px; align-items: center;" onclick="openBroadcastModal()">
-            <span style="font-size: 20px;">📢</span>
-            <div>
-                <h4 style="font-size: 12px; letter-spacing: 0.5px;">Diffuser un message flash</h4>
-                <p style="font-size: 11px; color: var(--light-grey); margin-top: 2px;">Notification prioritaire sur tous les écrans terminaux</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-gps">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="gps-modal-title">TÉLÉMÉTRIE SATELLITE</h3>
-                <button class="modal-close" onclick="closeModal('modal-gps')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="map-viewport">
-                    <div class="radar-screen"><div class="radar-target"></div></div>
-                    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 9px; font-weight: 600; color: var(--azur); background: var(--obsidian); padding: 5px 10px; border: 1px solid var(--border-color);">
-                        SIGNAL CHR | ACCURACY: &lt; 3m
-                    </div>
-                </div>
-                <p style="font-size: 11px; color: var(--light-grey); text-align: center; margin-top: 15px;">Coordonnées synchronisées avec la puce de l'agent en vacation.</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-blueprint">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="blueprint-modal-title">CARTOGRAPHIE OPÉRATIONNELLE</h3>
-                <button class="modal-close" onclick="closeModal('modal-blueprint')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="blueprint-grid">
-                    <span style="font-size: 32px; margin-bottom: 8px;">🏗️</span>
-                    <p style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--azur);" id="blueprint-file-name">PLAN_GENERIQUE.PDF</p>
-                    <p style="font-size: 10px; color: var(--light-grey); margin-top: 5px; font-weight: 500;">Zone de repli et vannes de coupure balisées.</p>
-                </div>
+                <div style="text-align:center; color:var(--light-grey); font-size:11px; padding:20px;">En attente de connexion sécurisée au serveur...</div>
             </div>
         </div>
     </div>
@@ -447,283 +239,217 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>SAISIE MAIN COURANTE</h3>
-                <button class="modal-close" onclick="closeModal('modal-report')">&times;</button>
+                <button class="modal-close" onclick="window.closeModal('modal-report')">&times;</button>
             </div>
             <div class="modal-body">
                 <label class="section-title" style="margin-top:0; display:block;">Catégorie d'événement</label>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-                    <div class="category-pill active" onclick="selectCategory(this)">Ronde Ras</div>
-                    <div class="category-pill" onclick="selectCategory(this)">Anomalie</div>
-                    <div class="category-pill" onclick="selectCategory(this)">Incidents</div>
-                    <div class="category-pill" onclick="selectCategory(this)">Contrôle Ext.</div>
+                    <div class="category-pill active" onclick="window.selectCategory(this)">Ronde Ras</div>
+                    <div class="category-pill" onclick="window.selectCategory(this)">Anomalie</div>
+                    <div class="category-pill" onclick="window.selectCategory(this)">Incidents</div>
                 </div>
                 <div class="input-group">
                     <label>Description des faits</label>
                     <textarea id="report-text" style="width:100%; height:90px; background-color: var(--input-bg); border: 1px solid var(--border-color); color: white; padding: 12px; border-radius: 6px; font-size: 13px; outline:none; resize:none;" placeholder="Rédiger le compte-rendu..."></textarea>
                 </div>
-                <div style="display:flex; gap:10px; margin-top: 15px;">
-                    <button class="btn-flat-secondary" style="flex:1; padding:12px 0;" onclick="alert('Simulation d\'ouverture de l\'appareil photo.')">📷 Joindre Photo</button>
-                    <button class="btn-flat-secondary" style="flex:1; padding:12px 0;" onclick="simulateVoiceDictation()">🎙️ Dictée Vocale</button>
-                </div>
-                <button class="btn-submit" style="margin-top:20px;" onclick="submitReport()">Consigner au registre</button>
+                <button class="btn-submit" style="margin-top:20px;" onclick="window.submitReportToFirebase()">Envoyer au serveur</button>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="modal-instructions">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>CONSIGNES PERMANENTES</h3>
-                <button class="modal-close" onclick="closeModal('modal-instructions')">&times;</button>
-            </div>
-            <div class="modal-body" style="display:flex; flex-direction:column; gap:12px;">
-                <div class="card" style="margin-bottom:0; background: rgba(255,255,255,0.02);">
-                    <h4 style="font-size:11px; color:var(--azur); margin-bottom:6px;">Ronde de surveillance</h4>
-                    <p style="font-size:12px; color:var(--light-grey);">Fréquence : Toutes les 120 minutes. Pointage obligatoire de l'ensemble des repères NFC installés sur la périphérie.</p>
-                </div>
-                <div class="card" style="margin-bottom:0; background: rgba(255,255,255,0.02);">
-                    <h4 style="font-size:11px; color:var(--alert-red); margin-bottom:6px;">Accès Logistique</h4>
-                    <p style="font-size:12px; color:var(--light-grey);">Fermeture rigoureuse des barrières extérieures dès 21h00. Contrôle d'identité strict pour toute entrée hors horaires.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script type="module">
+        // Importation des outils Firebase depuis les serveurs de Google
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    <div class="modal" id="modal-broadcast">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>DIFFUSION PRIORITAIRE HIERARCHIQUE</h3>
-                <button class="modal-close" onclick="closeModal('modal-broadcast')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label>Message d'ordre ou d'alerte</label>
-                    <textarea id="broadcast-text" style="width:100%; height:85px; background-color: var(--input-bg); border: 1px solid var(--border-color); color: white; padding: 12px; border-radius: 6px; font-size: 13px; outline:none; resize:none;" placeholder="Entrez les instructions à transmettre immédiatement à toutes les fiches de poste..."></textarea>
-                </div>
-                <button class="btn-submit" style="margin-top:15px; background-color: var(--alert-red); color: white;" onclick="submitBroadcast()">Diffuser le Flash</button>
-            </div>
-        </div>
-    </div>
+        // ---------------------------------------------------------
+        // --- CONFIGURATION FIREBASE OFFICIELLE ---
+        // ---------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyDitqUSpKc_xJuMgvVqz7JfrCk9dhO963E",
+            authDomain: "azzera-app.firebaseapp.com",
+            databaseURL: "https://azzera-app-default-rtdb.firebaseio.com",
+            projectId: "azzera-app",
+            storageBucket: "azzera-app.firebasestorage.app",
+            messagingSenderId: "552058799743",
+            appId: "1:552058799743:web:215ffb05f1028b5e05214a",
+            measurementId: "G-N4VHL7ZEHW"
+        };
 
-    <div class="modal" id="modal-config">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="config-modal-title">CONFIGURATION ELEMENT</h3>
-                <button class="modal-close" onclick="closeModal('modal-config')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label id="config-label-name">Désignation</label>
-                    <input type="text" id="config-input-name" autocomplete="off">
-                </div>
-                <div class="input-group" id="config-additional-group">
-                    <label>Paramètre complémentaire / Code d'accès</label>
-                    <input type="text" id="config-input-meta" autocomplete="off">
-                </div>
-                <button class="btn-submit" style="margin-top:15px;" onclick="submitConfiguration()">Ajouter au référentiel</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Gestion globale de la navigation entre les écrans
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            const targetView = document.getElementById(viewId);
-            if(targetView) targetView.addClassName ? targetView.addClassName('active') : targetView.classList.add('active');
+        // Initialisation de l'application et de la base de données
+        let app, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log("Firebase connecté avec succès à azzera-app !");
+        } catch(error) {
+            console.error("Erreur de connexion Firebase :", error);
         }
 
-        // Script d'authentification
-        function processLogin() {
+        // Variable pour retenir l'agent connecté
+        let currentAgentName = "Agent Terrain";
+
+        // Navigation UI
+        window.showView = function(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            // Si on ouvre la vue Boss, on lance l'écoute de la base de données
+            if(viewId === 'view-boss') {
+                startListeningToReports();
+            }
+        };
+
+        window.processLogin = function() {
             const user = document.getElementById('input-username').value.toLowerCase().trim();
             if (user === 'agent') {
-                showView('view-agent');
+                currentAgentName = "DUPONT J."; // Simulation d'une vraie connexion
+                window.showView('view-agent');
             } else if (user === 'azzera') {
-                showView('view-boss');
+                window.showView('view-boss');
             } else {
-                alert('Identifiant erroné. Saisir "agent" ou "azzera" pour la simulation.');
+                alert('Identifiant erroné. Saisir "agent" ou "azzera".');
             }
-        }
+        };
 
-        function triggerLogout() {
+        window.triggerLogout = function() {
             document.getElementById('input-username').value = '';
             document.getElementById('input-password').value = '';
-            showView('view-login');
-        }
+            window.showView('view-login');
+        };
 
-        // Logique opérationnelle du Portail Agent
+        // Fonctions Agent
         let agentServiceActive = false;
-        function toggleAgentService() {
+        window.toggleAgentService = async function() {
             const btn = document.getElementById('btn-agent-service');
-            const gpsBadge = document.getElementById('agent-gps-badge');
             const siteSelector = document.getElementById('agent-site-selector');
+            const siteName = siteSelector.value;
             
-            if ("vibrate" in navigator) navigator.vibrate(30);
-
             if (!agentServiceActive) {
                 agentServiceActive = true;
                 btn.innerText = "Clôturer Poste";
                 btn.style.backgroundColor = "transparent";
                 btn.style.border = "1px solid var(--grey)";
                 btn.style.color = "var(--white)";
-                
-                gpsBadge.className = "badge badge-green";
-                gpsBadge.innerText = "GPS SYNC ACTIF";
                 siteSelector.disabled = true;
                 
-                logEventToQG(`DUPONT J. : Prise de poste sur [${siteSelector.value}]`);
+                // Envoi Firebase de la prise de poste
+                await saveEventToFirebase("SYSTÈME", `Prise de poste sur : ${siteName}`, false);
             } else {
-                if (confirm("Confirmer la clôture réglementaire de la vacation ?")) {
+                if (confirm("Confirmer la clôture de la vacation ?")) {
                     agentServiceActive = false;
                     btn.innerText = "Prendre Poste";
                     btn.style.backgroundColor = "var(--azur)";
                     btn.style.border = "none";
                     btn.style.color = "var(--obsidian)";
-                    
-                    gpsBadge.className = "badge badge-orange";
-                    gpsBadge.innerText = "GPS DISCONNECT";
                     siteSelector.disabled = false;
                     
-                    logEventToQG(`DUPONT J. : Fin de vacation sur [${siteSelector.value}]`);
+                    // Envoi Firebase fin de poste
+                    await saveEventToFirebase("SYSTÈME", `Fin de vacation sur : ${siteName}`, false);
                 }
             }
-        }
+        };
 
-        function triggerCriticalSOS() {
+        window.triggerCriticalSOS = async function() {
             if ("vibrate" in navigator) navigator.vibrate([500, 250, 500, 250, 500]);
-            
-            const countAlertsEl = document.getElementById('count-alerts');
-            let currentAlerts = parseInt(countAlertsEl.innerText);
-            countAlertsEl.innerText = currentAlerts + 1;
-            document.getElementById('metric-incident-box').style.borderColor = 'var(--alert-red)';
-            
-            logEventToQG(`🚨 ALERTE PTI DECLENCHEE - DUPONT J.`, true);
-            alert("ALERTE CRITIQUE TRANSMISE AU CENTRE DE CONTRÔLE QUANTIFIÉ.");
-        }
+            await saveEventToFirebase("URGENCE", "ALERTE PTI DÉCLENCHÉE PAR L'AGENT", true);
+            alert("Alerte SOS transmise avec succès au serveur !");
+        };
 
-        // Gestion de la Main Courante Avancée (MCI)
-        function openAgentReportModal() {
+        // Modale Main Courante
+        window.openAgentReportModal = function() {
+            document.getElementById('report-text').value = '';
             document.getElementById('modal-report').style.display = 'flex';
-        }
+        };
 
-        function selectCategory(element) {
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        };
+
+        window.selectCategory = function(element) {
             document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
             element.classList.add('active');
+        };
+
+        // --- CŒUR DU SYSTÈME : ENVOI ET LECTURE FIREBASE ---
+
+        // Fonction pour écrire dans la base de données
+        async function saveEventToFirebase(category, text, isCritical) {
+            if(!db) return alert("Problème de connexion avec le serveur.");
+            
+            try {
+                await addDoc(collection(db, "mains_courantes"), {
+                    agent: currentAgentName,
+                    category: category,
+                    text: text,
+                    isCritical: isCritical,
+                    timestamp: serverTimestamp() // Heure officielle du serveur Google
+                });
+            } catch (error) {
+                console.error("Erreur d'écriture :", error);
+                alert("Erreur réseau. Le rapport n'a pas pu être envoyé. Vérifiez vos règles Firestore.");
+            }
         }
 
-        function simulateVoiceDictation() {
-            const textarea = document.getElementById('report-text');
-            textarea.value = "Anomalie constatée au niveau de la clôture nord. Liaison périmétrique à renforcer.";
-        }
-
-        function submitReport() {
+        // Fonction liée au bouton d'envoi de la modale
+        window.submitReportToFirebase = async function() {
             const text = document.getElementById('report-text').value.trim();
             const activeCat = document.querySelector('.category-pill.active').innerText;
-            if(!text) return alert("Le compte-rendu textuel ne peut être vide.");
             
-            logEventToQG(`DUPONT J. [${activeCat}] : ${text}`);
-            closeModal('modal-report');
-            alert("Rapport enregistré et horodaté.");
-        }
+            if(!text) return alert("Le compte-rendu ne peut être vide.");
+            
+            const btn = document.querySelector('#modal-report .btn-submit');
+            btn.innerText = "Envoi en cours...";
+            
+            await saveEventToFirebase(activeCat, text, activeCat === 'Incidents');
+            
+            btn.innerText = "Envoyer au serveur";
+            window.closeModal('modal-report');
+            
+            if ("vibrate" in navigator) navigator.vibrate(50);
+        };
 
-        // Gestion des fenêtres d'information et cartes
-        function openGpsTracking(agentName) {
-            document.getElementById('gps-modal-title').innerText = `TÉLÉMÉTRIE : ${agentName}`;
-            document.getElementById('modal-gps').style.display = 'flex';
-        }
+        // Fonction pour "écouter" la base de données en direct (Côté QG)
+        let unsubscribeLiveLogs = null;
+        function startListeningToReports() {
+            if(!db) return;
 
-        function openBlueprintModal(siteName) {
-            document.getElementById('blueprint-modal-title').innerText = `CARTOGRAPHIE : ${siteName.toUpperCase()}`;
-            document.getElementById('blueprint-file-name').innerText = `PLAN_${siteName.replace(/ /g, "_").toUpperCase()}.PDF`;
-            document.getElementById('modal-blueprint').style.display = 'flex';
-        }
-
-        function openInstructionModal() {
-            document.getElementById('modal-instructions').style.display = 'flex';
-        }
-
-        function openBroadcastModal() {
-            document.getElementById('modal-broadcast').style.display = 'flex';
-        }
-
-        function submitBroadcast() {
-            const msg = document.getElementById('broadcast-text').value.trim();
-            if(!msg) return;
-            logEventToQG(`ORDRE DU QG : ${msg}`, true);
-            closeModal('modal-broadcast');
-            alert("Instruction répercutée en direct.");
-        }
-
-        // Gestion des configurations d'éléments (Formulaire dynamique)
-        let currentConfigMode = '';
-        function openConfigModal(mode) {
-            currentConfigMode = mode;
-            document.getElementById('config-modal-title').innerText = `AJOUTER UN ${mode.toUpperCase()}`;
-            document.getElementById('config-label-name').innerText = mode === 'Agent' ? "Nom complet de l'agent" : "Nom du site d'intervention";
-            document.getElementById('config-input-name').value = '';
-            document.getElementById('config-input-meta').value = '';
-            document.getElementById('modal-config').style.display = 'flex';
-        }
-
-        function submitConfiguration() {
-            const name = document.getElementById('config-input-name').value.trim();
-            const meta = document.getElementById('config-input-meta').value.trim();
-            if(!name) return alert("Veuillez remplir les informations requises.");
-
-            if(currentConfigMode === 'Agent') {
-                const container = document.getElementById('boss-agents-list');
-                const row = document.createElement('div');
-                row.className = 'list-row';
-                row.innerHTML = `
-                    <div class="list-row-info">
-                        <h4>${name.toUpperCase()} <span class="badge badge-grey" style="font-size: 8px; padding: 2px 5px; margin-left: 5px;">REPOS</span></h4>
-                        <p>AUCUNE AFFECTATION ACTUELLE</p>
-                    </div>
-                    <div class="list-row-actions">
-                        <button class="btn-action-icon" style="color: var(--light-grey);" disabled>📍</button>
-                    </div>`;
-                container.appendChild(row);
-            } else if(currentConfigMode === 'Site') {
-                const selector = document.getElementById('agent-site-selector');
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.innerText = name;
-                selector.appendChild(opt);
-                alert(`Site [${name}] ajouté au catalogue d'affectation.`);
-            }
-
-            closeModal('modal-config');
-        }
-
-        // Module de simulation de ronde NFC
-        function startPatrolSimulation() {
-            if(!agentServiceActive) return alert("Veuillez préalablement prendre votre poste pour initier une ronde.");
-            if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
-            alert("Point de contrôle NFC lu avec succès.\nIdentifiant Badge : #AZ-4491-X\nStatut : Enregistré.");
-            logEventToQG(`DUPONT J. : Point de ronde #AZ-4491-X scanné.`);
-        }
-
-        // Utilitaires de transmission
-        function logEventToQG(message, isCritical = false) {
             const container = document.getElementById('live-log-container');
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             
-            const entry = document.createElement('div');
-            entry.className = isCritical ? 'log-entry critical' : 'log-entry';
-            entry.innerHTML = `<span>[${timeStr}] - ${message}</span><span style="color: ${isCritical ? 'var(--alert-red)' : 'var(--azur)'};">${isCritical ? 'CRITIQUE' : 'MCI'}</span>`;
+            // On demande à Firebase de nous donner les 50 derniers rapports, triés par date
+            const q = query(collection(db, "mains_courantes"), orderBy("timestamp", "desc"), limit(50));
             
-            container.insertBefore(entry, container.firstChild);
-        }
-
-        function dispatchWhatsApp() {
-            const numeroPatron = "33600000000"; // Remplacer par la variable définitive
-            const context = encodeURIComponent("Azzera Protect - Transmission Terrain : ");
-            window.open(`https://wa.me/${numeroPatron}?text=${context}`, '_blank');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+            // onSnapshot se déclenche tout seul à chaque fois qu'un rapport est ajouté !
+            unsubscribeLiveLogs = onSnapshot(q, (snapshot) => {
+                container.innerHTML = ''; // On vide le conteneur
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Formatage de l'heure
+                    let timeStr = "En cours...";
+                    if(data.timestamp) {
+                        const date = data.timestamp.toDate();
+                        timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    
+                    // Création de la ligne HTML
+                    const entry = document.createElement('div');
+                    entry.className = data.isCritical ? 'log-entry critical' : 'log-entry';
+                    
+                    entry.innerHTML = `
+                        <div>
+                            <strong style="color:var(--azur); margin-right:5px;">[${timeStr}]</strong>
+                            <strong style="margin-right:5px;">${data.agent} :</strong>
+                            <span style="color:var(--light-grey)">${data.text}</span>
+                        </div>
+                        <span style="color: ${data.isCritical ? 'var(--alert-red)' : 'var(--azur)'}; font-size:9px; font-weight:bold; align-self:center;">
+                            ${data.category.toUpperCase()}
+                        </span>
+                    `;
+                    container.appendChild(entry);
+                });
+            });
         }
     </script>
 </body>
