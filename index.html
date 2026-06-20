@@ -1,24 +1,308 @@
+
+Claude a terminé la réponse.
+
+index.html
+html
+
+la localisation des employés ne fonctionne pas et j'aimerai approfondir vraiment cette app la rendre super par exemple lorsque l'agent met depart en ronde ca part en ronde et c'est tout sur la mains courante ça notifie depart en ronde et demande pas de rajouter une description ensuite que les mains courantes sois répertorié par mission donc chaque prise de poste une main courante (consultable en direct toujours par le patron ensuite le nombre d'heure j'aimerais qu'il y ai le nombre d'heure mensuelle effectué par l'agent sur mon tableau de bord et si tu a d'autre fonctionalité pertinante je suis preneur ah oui j'oublier la page de connexion mon logo est géné par quelque chose visuelement quand on arrive sur la page qui défigure le logo si jamais t'arrive a réparer ca aussi tes au top voici le code
+
+Afficher plus
+20:50
+Je vais d'abord examiner votre fichier pour comprendre l'architecture actuelle de l'application.
+
+
+A exécuté une commande, consulté un fichier
+A exécuté une commande, consulté un fichier
+Je vois la fin du fichier, il me faut maintenant voir le reste — c'est une grosse application avec Firebase. Laissez-moi voir les parties manquantes en détail pour bien comprendre toute la logique avant de toucher quoi que ce soit.
+
+
+A consulté 5 fichiers
+A consulté 5 fichiers
+Maintenant je vois les lignes 246-283 manquantes (page de connexion) et le bloc agent (250-283).
+
+
+Voir le formulaire de connexion et le début de la vue agent
+Voir le formulaire de connexion et le début de la vue agent
+J'ai maintenant une vision complète de l'application. C'est une app de sécurité privée avec Firebase (Firestore) en backend, sans authentification réelle (juste un check de mot de passe en clair dans la base). Je comprends bien la structure. Avant de me lancer dans tout reprogrammer, je vais clarifier vos priorités pour bien cibler le travail.
+
+Q : Pour la localisation qui ne fonctionne pas : sur quel appareil/situation avez-vous testé ? (ça m'aide à cibler le bug)
+R : Sur mobile (Android/iPhone) en HTTPS
+
+Q : Pour le départ en ronde sans description : vous voulez que la catégorie 'Début de ronde' (et 'Fin de ronde') envoie directement la main courante en un clic, sans ouvrir le formulaire de description ?
+R : Garder la modale mais rendre la description optionnelle pour ces catégories
+
+Q : Pour les mains courantes par mission : je regroupe automatiquement tous les événements entre une 'prise de poste' et une 'fin de vacation' de l'agent comme une seule mission consultable par le patron. Ça correspond à ce que vous voulez ?
+R : Oui exactement ça
+
+Afficher plus
+20:51
+Parfait, merci pour ces précisions. Je vais maintenant travailler sur le fichier. Laissez-moi récapituler ce que je vais faire :
+
+Localisation : sur mobile HTTPS, watchPosition peut échouer silencieusement (permission refusée, timeout, pas de retry). Je vais ajouter une vraie gestion d'erreur, un fallback, et un indicateur visuel de statut GPS.
+Main courante "Début/Fin de ronde" : description optionnelle, texte auto-généré si vide.
+Mission par vacation : regrouper les événements par missionId (créé à la prise de poste), consultable par le patron.
+Heures mensuelles sur tableau de bord patron : ajouter ce total.
+Logo qui se déforme à la connexion : transform: scale(1.4) sur le wrapper déforme l'image avant chargement — je vais corriger ça proprement.
+Je proposerai aussi d'autres améliorations pertinentes.
+Je commence par copier le fichier et travailler dessus.
+
+
+Copier le fichier dans l'espace de travail
+Copier le fichier dans l'espace de travail
+Pas de skill pertinent ici (c'est un fichier HTML autonome, pas un docx/pptx/xlsx/pdf). Je vais directement éditer. Commençons par le bug du logo à la connexion.
+
+
+2 fichiers modifiés
+2 fichiers modifiés
+Maintenant j'ajoute le CSS correspondant pour .brand-container-login et .logo-wrapper-login, avec une taille fixe et nette (au lieu d'un transform: scale() qui floute le rendu du logo PNG) :
+
+
+Ajouter le CSS propre pour le logo agrandi sur la page de connexion, sans flou de transform:scale
+Ajouter le CSS propre pour le logo agrandi sur la page de connexion, sans flou de transform:scale
+Maintenant attaquons le cœur du sujet : la géolocalisation. Le problème principal sur mobile HTTPS : aucune gestion d'erreur visible, pas de retry, pas de statut affiché à l'agent, et watchPosition peut échouer silencieusement sans jamais relancer.
+
+
+Revoir précisément le bloc geo sharing actuel
+Revoir précisément le bloc geo sharing actuel
+J'identifie plusieurs problèmes réels :
+
+pushGeo() est appelé immédiatement dans startGeoSharing(), avant que watchPosition n'ait eu le temps de retourner une première position → lastCoords est null au premier envoi (pas grave en soi, mais ne corrige rien si jamais le watch échoue).
+L'erreur de watchPosition est totalement avalée (() => {}) — si l'utilisateur refuse la permission ou que le GPS timeout, rien ne se passe, l'agent ne sait pas que sa position n'est pas envoyée.
+Pas de timeout sur watchPosition → sur certains Android, si le GPS ne répond jamais, ça peut rester bloqué indéfiniment sans déclencher d'erreur ni de position.
+Aucun indicateur visuel pour l'agent confirmant que sa position est bien transmise.
+Si la permission est refusée, il n'y a aucun fallback ni message clair.
+Je vais réécrire ce bloc avec une gestion d'erreur complète, un statut visible, et un fallback par getCurrentPosition périodique si watchPosition échoue.
+
+
+Réécrire le partage GPS avec gestion d'erreurs complète, statut visible pour l'agent et fallback en cas d'échec du watchPosition
+Réécrire le partage GPS avec gestion d'erreurs complète, statut visible pour l'agent et fallback en cas d'échec du watchPosition
+Maintenant je dois mettre à jour stopGeoSharing pour nettoyer le nouvel interval, et masquer le badge :
+
+
+A consulté 2 fichiers, fichier modifié
+A consulté 2 fichiers, fichier modifié
+Maintenant j'ajoute le badge geo-status-badge dans l'interface agent, à côté du badge de statut existant :
+
+
+Ajouter un badge de statut GPS visible par l'agent à côté du badge de service
+Ajouter un badge de statut GPS visible par l'agent à côté du badge de service
+Le badge va se retrouver dans un <div> avec display:flex côte à côte avec le badge principal mais sur la même ligne — vérifions le contexte exact pour que ça s'affiche bien :
+
+
+A exécuté une commande, consulté un fichier
+A exécuté une commande, consulté un fichier
+Le parent est en justify-content:space-between avec deux enfants directs. Ajouter un 3e enfant casserait l'alignement. Je les regroupe dans un wrapper flex :
+
+
+Regrouper les deux badges dans un conteneur flex pour préserver le layout space-between
+Regrouper les deux badges dans un conteneur flex pour préserver le layout space-between
+Maintenant, vérifions le metric-box patron : il y a déjà "Heures cumulées / jour", je dois ajouter "Heures cumulées / mois" comme demandé. Regardons le bloc des métriques patron :
+
+
+A exécuté une commande, consulté un fichier
+A exécuté une commande, consulté un fichier
+Je transforme la grille 2×2 en 2×3 pour ajouter "Heures cumulées / mois", et aussi ajouter un détail des heures mensuelles par agent dans la liste des agents (déjà présente partiellement, mais seulement le quotidien). Je fais les deux :
+
+
+Ajouter une métrique heures cumulées mensuelles dans le tableau de bord patron, passer la grille en 3 colonnes
+Ajouter une métrique heures cumulées mensuelles dans le tableau de bord patron, passer la grille en 3 colonnes
+Maintenant je dois aussi ajouter l'heure mensuelle dans la fiche de chaque agent (liste "Dispositif Opérationnel"), et mettre à jour renderBossDashboard() pour calculer total-hours-month et total-missions-month. Regardons la fonction actuelle :
+
+
+Voir la fonction renderBossDashboard actuelle
+Voir la fonction renderBossDashboard actuelle
+Maintenant je mets à jour renderBossDashboard pour calculer le total mensuel et le total des missions (je vais aussi ajouter missionsCache plus tard pour ce dernier point, mais je peux déjà afficher les heures mensuelles par agent dans la liste) :
+
+
+Calculer et afficher le total des heures mensuelles cumulées, et l'heure mensuelle par agent dans la liste
+Calculer et afficher le total des heures mensuelles cumulées, et l'heure mensuelle par agent dans la liste
+Maintenant attaquons la partie centrale : les missions. Il me faut :
+
+Générer un missionId à la prise de poste (stocké sur l'agent).
+Attacher ce missionId + missionStartedAt à chaque main courante créée pendant cette vacation.
+Une vue "Missions" pour le patron qui regroupe les mains courantes par mission.
+Côté agent : description optionnelle pour "Début de ronde" / "Fin de ronde" avec texte auto-généré si vide.
+Commençons par finalizeClockIn pour générer le missionId :
+
+
+Revoir finalizeClockIn et doClockOut
+Revoir finalizeClockIn et doClockOut
+Maintenant je vais introduire un système de missionId global au niveau JS (variable de session currentMissionId), généré à la prise de poste, stocké sur le doc agent, et propagé dans chaque main courante via saveEventToFirebase.
+
+
+Générer un missionId unique à la prise de poste, le stocker sur l'agent, et créer un document mission dans Firestore
+Générer un missionId unique à la prise de poste, le stocker sur l'agent, et créer un document mission dans Firestore
+Maintenant je dois déclarer currentMissionId dans les variables globales, et le restaurer à la connexion si l'agent était déjà en service (reprise de session) :
+
+
+Ajouter la variable globale currentMissionId
+Ajouter la variable globale currentMissionId
+Maintenant je dois m'assurer que currentMissionId est restauré quand listenOwnUser() reçoit les données (cas où l'agent recharge la page en plein service). Regardons listenOwnUser :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+Maintenant, mettons à jour saveEventToFirebase pour qu'il attache missionId à chaque main courante :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+Maintenant, occupons-nous de la description optionnelle pour Début/Fin de ronde. Regardons submitReportToFirebase :
+
+
+Voir submitReportToFirebase
+Voir submitReportToFirebase
+Je rends la description optionnelle pour "Début de ronde" et "Fin de ronde" uniquement, avec un texte par défaut généré si vide. J'ajoute aussi un indicateur visuel dans le textarea (placeholder dynamique) pour que l'agent comprenne que ce n'est plus obligatoire pour ces catégories.
+
+
+Rendre la description optionnelle pour Début/Fin de ronde avec texte auto-généré si vide
+Rendre la description optionnelle pour Début/Fin de ronde avec texte auto-généré si vide
+Maintenant je mets à jour le placeholder du textarea dynamiquement selon la catégorie sélectionnée, pour que l'agent comprenne que c'est optionnel. Regardons selectCategory et openAgentReportModal :
+
+
+Voir les fonctions de sélection de catégorie et ouverture modale
+Voir les fonctions de sélection de catégorie et ouverture modale
+Je vais donner un id au <label> "Description des faits" pour pouvoir le mettre à jour dynamiquement, et étoffer selectCategory :
+
+
+2 fichiers modifiés, a exécuté une commande
+2 fichiers modifiés, a exécuté une commande
+Maintenant je dois aussi appeler updateReportTextHint à l'ouverture de la modale, puisque "Début de ronde" est le pill actif par défaut :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+Maintenant, je dois aussi corriger un détail important : quand l'agent clique sur "Pointer arrivée", la fonction saveEventToFirebase('SYSTÈME', 'Prise de poste...') est appelée — mais ce n'est pas une catégorie listée dans category-pill-grid, c'est juste un événement système, donc ça n'a pas de lien avec la modale. C'est cohérent et indépendant. Bien.
+
+Maintenant, ajoutons la vue "Missions" pour le patron, consultable en direct, qui regroupe les mains courantes par mission. Je vais ajouter une nouvelle section dans le tableau de bord patron, avec une modale dédiée qui liste les missions et permet de cliquer pour voir le détail (mains courantes associées).
+
+
+Voir la section Journal des événements MCI dans le HTML patron
+Voir la section Journal des événements MCI dans le HTML patron
+J'ajoute une nouvelle section "Missions" juste avant le journal des événements, avec une liste cliquable :
+
+
+Ajouter une section Missions au tableau de bord patron, listant chaque mission (prise de poste -> fin de vacation) avec accès au détail
+Ajouter une section Missions au tableau de bord patron, listant chaque mission (prise de poste -> fin de vacation) avec accès au détail
+Maintenant ajoutons la modale de détail d'une mission (liste des mains courantes de cette mission), proche des autres modales :
+
+
+A exécuté une commande, consulté un fichier, fichier modifié
+A exécuté une commande, consulté un fichier, fichier modifié
+Maintenant, ajoutons la logique JS : un cache missionsCache, une fonction listenMissions(), renderFilteredMissions(), et openMissionDetail(). Je place ça après listenAgentsList/renderBossDashboard :
+
+
+Exécuté 2 commandes, 2 fichiers modifiés
+Exécuté 2 commandes, 2 fichiers modifiés
+Maintenant je dois aussi désinscrire unsubMissions à la déconnexion :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+Maintenant ajoutons listenMissions() à enterBossSession() :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+Maintenant, j'ajoute toute la logique JS des missions (écoute, rendu liste, détail). Je place ça juste après listenReports() / buildLogEntry :
+
+
+A exécuté une commande, fichier modifié
+A exécuté une commande, fichier modifié
+
+Voir la fin de listenReports pour insérer après
+
+Script
+
+Ajouter toute la logique missions: écoute Firestore, rendu liste filtrée, et détail de mission
+
+index.html
++94
+-4
+Terminé
+Maintenant, côté agent : la consigne « consultable en direct par le patron » est couverte côté QG. Mais l'agent doit aussi pouvoir consulter sa propre mission en cours dans son "Historique" — c'est déjà fait via openAgentHistoryModal, c'est suffisant.
+
+Vérifions maintenant qu'on n'a pas cassé la syntaxe JS avec un check Node :
+
+
+Vérifier la syntaxe JS du script module principal
+Vérifier la syntaxe JS du script module principal
+
+Vérifier la syntaxe JS du script module principal
+bash
+
+cd /home/claude && python3 -c "
+import re
+with open('index.html') as f:
+    content = f.read()
+# Extraire le script module
+m = re.search(r'<script type=\"module\">(.*?)</script>', content, re.S)
+print('found' if m else 'not found', len(m.group(1)) if m else 0)
+with open('extracted.js', 'w') as f:
+    f.write(m.group(1))
+"
+node --check extracted.js && echo "OK syntax valid"
+Sortie
+
+found 59322
+OK syntax valid
+Terminé
+La syntaxe est valide. Vérifions aussi que les balises HTML sont équilibrées (div/modal) :
+
+
+Vérifier l'équilibre des balises div
+Vérifier l'équilibre des balises div
+
+Vérifier l'équilibre des balises div
+bash
+
+cd /home/claude && python3 -c "
+content = open('index.html').read()
+opens = content.count('<div')
+closes = content.count('</div>')
+print('div open:', opens, 'div close:', closes)
+modals_open = content.count('class=\"modal\" id=')
+print('modals:', modals_open)
+"
+Sortie
+
+div open: 176 div close: 176
+modals: 8
+Terminé
+Claude a atteint sa limite d'utilisation d'outils pour cette interaction.
+
+
+Claude Fable 5 est actuellement indisponible.
+En savoir plus(opens in new tab)
+
+
+
+
+Claude est une IA et peut faire des erreurs. Veuillez vérifier les réponses.
+
+
+Index · HTML
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Azzera Protect - Application Métier</title>
-
+ 
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     <link rel="shortcut icon" href="favicon.png">
-
+ 
     <meta name="theme-color" content="#141c25">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Azzera Pro">
-
+ 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+ 
     <style>
         :root {
             /* Palette officielle de la charte graphique */
@@ -27,18 +311,18 @@
             --azur: #64d0ff;
             --grey: #4C4C4C;
             --light-grey: #a0a5ac;
-
+ 
             /* Couleurs fonctionnelles strictes */
             --alert-red: #D92525;
             --status-green: #27A644;
             --status-orange: #E58A00;
-
+ 
             /* Structure de surface */
             --card-bg: rgba(255, 255, 255, 0.04);
             --border-color: rgba(255, 255, 255, 0.08);
             --input-bg: #1e2936;
         }
-
+ 
         * {
             box-sizing: border-box;
             margin: 0;
@@ -48,7 +332,7 @@
             -webkit-tap-highlight-color: transparent;
             font-family: 'Montserrat', sans-serif;
         }
-
+ 
         body {
             background-color: var(--obsidian);
             color: var(--white);
@@ -59,18 +343,18 @@
             display: flex;
             flex-direction: column;
         }
-
+ 
         *:focus-visible { outline: 2px solid var(--azur); outline-offset: 2px; }
-
+ 
         /* --- TYPOGRAPHIE --- */
         h1, h2, h3, h4, .uppercase-title { text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
         p, .body-text { font-weight: 400; line-height: 1.5; color: var(--white); }
         .micro-label { color: var(--light-grey); font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-
+ 
         /* --- VUES SÉPARÉES --- */
         .view { display: none; flex-direction: column; flex-grow: 1; animation: viewFade 0.25s ease-out; }
         .view.active { display: flex; }
-
+ 
         @keyframes viewFade {
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
@@ -79,7 +363,7 @@
             .view { animation: none; }
             * { transition: none !important; }
         }
-
+ 
         /* --- BLOC LOGO --- */
         .brand-container { display: flex; align-items: center; gap: 12px; }
         .logo-wrapper { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -88,17 +372,22 @@
         .brand-text-block { display: flex; flex-direction: column; }
         .brand-text-main { font-size: 15px; font-weight: 800; letter-spacing: 1px; line-height: 1.1; }
         .brand-text-sub { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; color: var(--azur); margin-top: 2px; }
-
+ 
+        /* Variante agrandie pour la page de connexion : on agrandit les éléments
+           eux-mêmes (et non via transform:scale) pour garder un rendu net du logo PNG. */
+        .brand-container-login { gap: 16px; margin-bottom: 35px; }
+        .logo-wrapper-login { width: 50px; height: 50px; }
+ 
         header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .logout-btn { color: var(--light-grey); font-weight: 600; font-size: 11px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         .live-clock { font-size: 11px; color: var(--azur); font-weight: 700; letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
-
+ 
         /* --- INTERFACE DE CONNEXION --- */
         .login-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
         .login-slogan { text-align: center; font-weight: 300; font-size: 16px; line-height: 1.5; margin-bottom: 45px; color: var(--white); letter-spacing: 0.5px; }
         .login-slogan strong { font-weight: 600; color: var(--azur); }
-
+ 
         .login-form-box { width: 100%; max-width: 360px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 20px; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--azur); margin-bottom: 6px; letter-spacing: 1px; }
@@ -106,52 +395,52 @@
         .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--azur); }
         .field-hint { font-size: 10px; color: var(--light-grey); margin-top: 8px; }
         .login-error { color: var(--alert-red); font-size: 11px; font-weight: 600; text-align: center; margin-top: -8px; margin-bottom: 14px; min-height: 14px; }
-
+ 
         .btn-submit { width: 100%; padding: 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; background-color: var(--azur); color: var(--obsidian); }
         .btn-submit:disabled { opacity: 0.6; cursor: default; }
-
+ 
         /* --- COMPOSANTS UI --- */
         .section-title { font-size: 11px; color: var(--azur); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
         .section-title .link-action { color: var(--light-grey); font-size: 10px; cursor: pointer; letter-spacing: 0.5px; text-decoration: underline; }
         .card { background-color: var(--card-bg); border-radius: 12px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-
+ 
         .action-card { background-color: var(--card-bg); border-radius: 12px; padding: 14px 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; border: 1px solid var(--border-color); transition: background-color 0.15s; }
         .action-card:active { background-color: rgba(100, 208, 255, 0.08); border-color: var(--azur); }
         .action-icon { font-size: 24px; margin-bottom: 8px; }
         .action-title { font-size: 10px; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
-
+ 
         .btn-flat-primary { background-color: var(--azur); color: var(--obsidian); border: none; padding: 12px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
         .btn-flat-secondary { background-color: transparent; color: var(--white); border: 1px solid var(--grey); padding: 12px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
         .btn-flat-danger { background-color: transparent; color: var(--alert-red); border: 1px solid var(--alert-red); padding: 12px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
-
+ 
         .btn-emergency { background-color: var(--alert-red); color: var(--white); width: 100%; padding: 18px; border-radius: 8px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin-top: auto; }
         .btn-emergency:disabled { opacity: 0.5; }
-
+ 
         .badge { padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border: 1px solid; }
         .badge-green { background-color: transparent; color: var(--status-green); border-color: var(--status-green); }
         .badge-orange { background-color: transparent; color: var(--status-orange); border-color: var(--status-orange); }
         .badge-grey { background-color: transparent; color: var(--light-grey); border-color: var(--grey); }
         .badge-red { background-color: transparent; color: var(--alert-red); border-color: var(--alert-red); }
         .badge-sm { font-size: 8px; padding: 2px 5px; margin-left: 5px; }
-
+ 
         /* --- SUPERVISION (QG) --- */
         .metrics-row-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .metric-box { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; text-align: center; }
         .metric-value { font-size: 20px; font-weight: 800; color: var(--white); margin-top: 4px; font-variant-numeric: tabular-nums; }
         .metric-box.alert .metric-value { color: var(--alert-red); }
-
+ 
         .map-wrap { height: 220px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 15px; position: relative; background: var(--input-bg); }
         .map-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-size: 11px; color: var(--light-grey); }
         .leaflet-container { background: var(--obsidian) !important; }
         .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9); }
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--obsidian); color: var(--white); }
-
+ 
         .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
         .toolbar input, .toolbar select { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: white; font-size: 12px; outline: none; }
         .toolbar select { flex: 0 0 auto; max-width: 130px; }
-
+ 
         .list-container { display: flex; flex-direction: column; gap: 8px; }
         .list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; gap: 8px; }
         .list-row-info h4 { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
@@ -159,30 +448,30 @@
         .list-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
         .btn-action-icon { background-color: var(--input-bg); border: 1px solid var(--border-color); width: 34px; height: 34px; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 13px; cursor: pointer; color: var(--white); }
         .empty-state { text-align: center; color: var(--light-grey); font-size: 11px; padding: 20px; }
-
+ 
         .live-log-box { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .log-entry { font-size: 11px; padding: 8px; border-left: 2px solid var(--grey); background-color: rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 4px; }
         .log-entry.critical { border-left-color: var(--alert-red); background-color: rgba(217, 37, 37, 0.05); }
         .log-entry-top { display: flex; justify-content: space-between; gap: 8px; }
         .log-entry-photo { max-width: 100%; border-radius: 6px; margin-top: 4px; max-height: 140px; object-fit: cover; }
-
+ 
         /* --- BANDEAU DIFFUSION --- */
         .broadcast-banner { display: none; background-color: var(--azur); color: var(--obsidian); padding: 12px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 15px; align-items: center; gap: 10px; }
         .broadcast-banner.show { display: flex; }
         .broadcast-banner .bb-close { cursor: pointer; font-weight: 800; font-size: 16px; margin-left: auto; }
-
+ 
         /* --- TOAST --- */
         .toast-host { position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 8px; width: calc(100% - 40px); max-width: 360px; align-items: center; }
         .toast { background-color: var(--obsidian); border: 1px solid var(--azur); color: var(--white); padding: 12px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.4); animation: toastIn 0.2s ease-out; text-align: center; }
         .toast.error { border-color: var(--alert-red); }
         @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
+ 
         /* --- NFC --- */
         .nfc-pulse-wrap { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 16px 0; }
         .nfc-pulse-wrap.show { display: flex; }
         .nfc-pulse { width: 56px; height: 56px; border-radius: 50%; background: rgba(100,208,255,0.12); border: 2px solid var(--azur); display: flex; align-items: center; justify-content: center; font-size: 22px; animation: nfcPulse 1.4s infinite ease-out; }
         @keyframes nfcPulse { 0% { box-shadow: 0 0 0 0 rgba(100,208,255,0.35); } 100% { box-shadow: 0 0 0 16px rgba(100,208,255,0); } }
-
+ 
         /* --- TOGGLE --- */
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .toggle-row span { font-size: 12px; font-weight: 600; }
@@ -192,12 +481,12 @@
         .slider-track:before { position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px; background-color: var(--light-grey); border-radius: 50%; transition: 0.2s; }
         .switch input:checked + .slider-track { border-color: var(--alert-red); }
         .switch input:checked + .slider-track:before { transform: translateX(18px); background-color: var(--alert-red); }
-
+ 
         /* --- CATEGORY PILLS --- */
         .category-pill { padding: 10px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-align: center; transition: border-color 0.2s, color 0.2s; }
         .category-pill.active { border-color: var(--azur); color: var(--azur); }
         .category-pill.crit.active { border-color: var(--alert-red); color: var(--alert-red); }
-
+ 
         /* --- MODALES --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 28, 37, 0.96); z-index: 1000; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
         .modal-content { background-color: var(--obsidian); width: 100%; max-width: 460px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; max-height: 92vh; }
@@ -205,7 +494,7 @@
         .modal-header h3 { font-size: 13px; color: var(--azur); }
         .modal-close { background: none; border: none; color: var(--light-grey); font-size: 24px; cursor: pointer; }
         .modal-body { padding: 20px; overflow-y: auto; }
-
+ 
         .photo-preview-wrap { margin-top: 10px; display: none; }
         .photo-preview-wrap.show { display: block; }
         .photo-preview-wrap img { width: 100%; border-radius: 8px; max-height: 160px; object-fit: cover; }
@@ -214,14 +503,14 @@
     </style>
 </head>
 <body>
-
+ 
     <div class="toast-host" id="toast-host"></div>
-
+ 
     <!-- ===================== CONNEXION ===================== -->
     <div id="view-login" class="view active">
         <div class="login-container">
-            <div class="brand-container" style="margin-bottom: 35px; transform: scale(1.4);">
-                <div class="logo-wrapper">
+            <div class="brand-container brand-container-login">
+                <div class="logo-wrapper logo-wrapper-login">
                     <img src="logo.png" alt="" onerror="this.style.display='none';" class="brand-logo-img">
                     <svg class="brand-logo-fallback" viewBox="0 0 24 24">
                         <path d="M12 2L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 2Z"/>
@@ -229,13 +518,13 @@
                     </svg>
                 </div>
                 <div class="brand-text-block">
-                    <div class="brand-text-main">AZZERA PROTECT</div>
-                    <div class="brand-text-sub">SÉCURITÉ PRIVÉE</div>
+                    <div class="brand-text-main" style="font-size: 21px;">AZZERA PROTECT</div>
+                    <div class="brand-text-sub" style="font-size: 12.6px;">SÉCURITÉ PRIVÉE</div>
                 </div>
             </div>
-
+ 
             <h2 class="login-slogan">Anticiper vaut mieux qu'intervenir.<br><strong>Nous faisons les deux.</strong></h2>
-
+ 
             <div class="login-form-box">
                 <div class="input-group">
                     <label>Identifiant</label>
@@ -251,7 +540,7 @@
             <p class="field-hint" id="login-status">Connexion au serveur...</p>
         </div>
     </div>
-
+ 
     <!-- ===================== INTERFACE AGENT ===================== -->
     <div id="view-agent" class="view">
         <header>
@@ -272,34 +561,37 @@
                 <div class="logout-btn" onclick="window.triggerLogout()">Quitter</div>
             </div>
         </header>
-
+ 
         <div class="broadcast-banner" id="agent-broadcast-banner">
             <span>📢</span>
             <span id="agent-broadcast-text"></span>
             <span class="bb-close" onclick="window.dismissBroadcast()">&times;</span>
         </div>
-
+ 
         <div class="card" id="agent-pointage-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
                     <p class="micro-label">Site affecté</p>
                     <h3 id="agent-site-name" style="font-size:15px;margin-top:4px;">—</h3>
                 </div>
-                <span class="badge badge-grey" id="agent-status-badge">HORS SERVICE</span>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                    <span class="badge badge-grey" id="agent-status-badge">HORS SERVICE</span>
+                    <span class="badge badge-sm" id="geo-status-badge" style="display:none;"></span>
+                </div>
             </div>
-
+ 
             <div class="nfc-pulse-wrap" id="nfc-pulse-wrap">
                 <div class="nfc-pulse">📡</div>
                 <p class="field-hint" style="margin-top:0;">Approchez le badge NFC du site...</p>
                 <button class="btn-flat-secondary" style="padding:8px 14px;" onclick="window.cancelNfcScan()">Annuler</button>
             </div>
-
+ 
             <div style="margin-top:14px;" id="agent-service-btn-wrap">
                 <button class="btn-flat-primary" style="width:100%;" id="btn-agent-service" onclick="window.toggleAgentService()">📡 Pointer arrivée (NFC)</button>
             </div>
             <p class="field-hint" id="agent-nfc-hint"></p>
         </div>
-
+ 
         <div class="card" style="display:flex;justify-content:space-around;text-align:center;padding:14px;">
             <div>
                 <p class="micro-label">Aujourd'hui</p>
@@ -311,7 +603,7 @@
                 <div class="metric-value" id="agent-hours-month" style="font-size:18px;">0h00</div>
             </div>
         </div>
-
+ 
         <div class="section-title">Opérations de terrain</div>
         <div class="grid-3">
             <div class="action-card" onclick="window.openAgentReportModal()">
@@ -327,10 +619,10 @@
                 <div class="action-title">Historique</div>
             </div>
         </div>
-
+ 
         <button class="btn-emergency" id="btn-sos" onclick="window.triggerCriticalSOS()">🚨 Signal SOS PTI</button>
     </div>
-
+ 
     <!-- ===================== INTERFACE AZZERA (QG) ===================== -->
     <div id="view-boss" class="view">
         <header>
@@ -351,8 +643,8 @@
                 <div class="logout-btn" onclick="window.triggerLogout()">Déconnexion</div>
             </div>
         </header>
-
-        <div class="metrics-row-4">
+ 
+        <div class="metrics-row-4" style="grid-template-columns: 1fr 1fr 1fr;">
             <div class="metric-box">
                 <p class="micro-label">En poste</p>
                 <div class="metric-value" style="color: var(--status-green);" id="count-active-agents">0</div>
@@ -366,17 +658,42 @@
                 <div class="metric-value" id="count-alerts">0</div>
             </div>
             <div class="metric-box">
-                <p class="micro-label">Heures cumulées / jour</p>
+                <p class="micro-label">Heures / jour</p>
                 <div class="metric-value" id="total-hours-today" style="font-size:16px;">0h00</div>
             </div>
+            <div class="metric-box">
+                <p class="micro-label">Heures / mois</p>
+                <div class="metric-value" id="total-hours-month" style="font-size:16px;">0h00</div>
+            </div>
+            <div class="metric-box">
+                <p class="micro-label">Missions / mois</p>
+                <div class="metric-value" id="total-missions-month" style="font-size:16px;">0</div>
+            </div>
         </div>
-
+ 
         <div class="section-title">Localisation en temps réel</div>
         <div class="map-wrap" id="map-wrap">
             <div id="live-map" style="height:100%;width:100%;"></div>
             <div class="map-fallback" id="map-fallback" style="display:none;">Carte indisponible (connexion requise). La liste ci-dessous reste à jour en temps réel.</div>
         </div>
-
+ 
+        <div class="section-title">
+            <span>Missions (par prise de poste)</span>
+        </div>
+        <div class="card" style="padding: 12px;">
+            <div class="toolbar">
+                <input type="text" id="mission-filter-search" placeholder="Rechercher agent ou site..." oninput="window.renderFilteredMissions()">
+                <select id="mission-filter-status" onchange="window.renderFilteredMissions()">
+                    <option value="">Toutes</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="terminee">Terminées</option>
+                </select>
+            </div>
+            <div class="list-container" id="missions-list-container">
+                <div class="empty-state">Connexion au serveur en cours...</div>
+            </div>
+        </div>
+ 
         <div class="section-title">
             <span>Journal des événements (MCI)</span>
             <span class="link-action" onclick="window.exportReportsCSV()">⬇ Export CSV</span>
@@ -401,19 +718,19 @@
                 <div class="empty-state">Connexion au serveur en cours...</div>
             </div>
         </div>
-
+ 
         <div class="section-title">Dispositif Opérationnel</div>
         <div class="card" style="padding: 10px;">
             <div class="list-container" id="boss-agents-list">
                 <div class="empty-state">Aucun agent enregistré.</div>
             </div>
         </div>
-
+ 
         <div class="grid-2">
             <button class="btn-flat-secondary" onclick="window.openConfigModal('Agent')">+ Nouvel Agent</button>
             <button class="btn-flat-secondary" onclick="window.openConfigModal('Site')">+ Nouveau Site</button>
         </div>
-
+ 
         <div class="section-title">Alerte descendante</div>
         <div class="card" style="padding: 15px; display: flex; gap: 10px; align-items: center; cursor:pointer;" onclick="window.openBroadcastModal()">
             <span style="font-size: 20px;">📢</span>
@@ -422,14 +739,14 @@
                 <p style="font-size: 11px; color: var(--light-grey); margin-top: 2px;">Notification prioritaire sur tous les terminaux</p>
             </div>
         </div>
-
+ 
         <div class="section-title">Paramètres</div>
         <div class="grid-2">
             <button class="btn-flat-secondary" onclick="window.openPasswordModal()">🔑 Mon mot de passe</button>
             <button class="btn-flat-secondary" onclick="window.openInstructionModal()">📋 Consignes</button>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE MAIN COURANTE ===================== -->
     <div class="modal" id="modal-report">
         <div class="modal-content">
@@ -449,10 +766,10 @@
                     <div class="category-pill" data-crit="0" style="grid-column: span 2;" onclick="window.selectCategory(this)">📌 Autre</div>
                 </div>
                 <div class="input-group">
-                    <label>Description des faits</label>
+                    <label id="report-text-label">Description des faits</label>
                     <textarea id="report-text" style="height:90px; resize:none;" placeholder="Rédiger le compte-rendu..."></textarea>
                 </div>
-
+ 
                 <label class="btn-file">
                     <span id="photo-btn-label">📷 Ajouter une photo (optionnel)</span>
                     <input type="file" id="report-photo-input" accept="image/*" capture="environment" onchange="window.handlePhotoSelect(event)">
@@ -460,7 +777,7 @@
                 <div class="photo-preview-wrap" id="photo-preview-wrap">
                     <img id="photo-preview-img" alt="Aperçu">
                 </div>
-
+ 
                 <div class="toggle-row">
                     <span>Signaler comme urgent</span>
                     <label class="switch">
@@ -468,12 +785,12 @@
                         <span class="slider-track"></span>
                     </label>
                 </div>
-
+ 
                 <button class="btn-submit" style="margin-top:20px;" id="btn-submit-report" onclick="window.submitReportToFirebase()">Envoyer au serveur</button>
             </div>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE CONSIGNES ===================== -->
     <div class="modal" id="modal-instructions">
         <div class="modal-content">
@@ -487,7 +804,7 @@
             <div class="modal-body" style="padding-top:0;" id="instructions-edit-wrap"></div>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE EDITION CONSIGNES (BOSS) ===================== -->
     <div class="modal" id="modal-edit-instructions">
         <div class="modal-content">
@@ -508,7 +825,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE HISTORIQUE AGENT ===================== -->
     <div class="modal" id="modal-agent-history">
         <div class="modal-content">
@@ -523,7 +840,23 @@
             </div>
         </div>
     </div>
-
+ 
+    <!-- ===================== MODALE DÉTAIL MISSION (BOSS) ===================== -->
+    <div class="modal" id="modal-mission-detail">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="mission-detail-title">DÉTAIL DE LA MISSION</h3>
+                <button class="modal-close" onclick="window.closeModal('modal-mission-detail')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="card" style="margin-bottom:15px;" id="mission-detail-summary"></div>
+                <div class="live-log-box" id="mission-detail-container" style="max-height:50vh;">
+                    <div class="empty-state">Chargement...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
     <!-- ===================== MODALE CONFIGURATION (AGENT / SITE) ===================== -->
     <div class="modal" id="modal-config">
         <div class="modal-content">
@@ -536,7 +869,7 @@
                     <label id="config-label-name">Désignation</label>
                     <input type="text" id="config-input-name" autocomplete="off" placeholder="Ex : Jean Dupont ou Nouveau Chantier">
                 </div>
-
+ 
                 <div id="config-agent-fields">
                     <div class="input-group">
                         <label>Identifiant de connexion</label>
@@ -551,7 +884,7 @@
                         <select id="config-select-site"></select>
                     </div>
                 </div>
-
+ 
                 <div id="config-site-fields">
                     <div class="input-group">
                         <label>Adresse</label>
@@ -573,12 +906,12 @@
                     </div>
                     <button class="btn-flat-secondary" style="width:100%;margin-bottom:15px;" onclick="window.useMyLocationForSite()">📍 Utiliser ma position actuelle</button>
                 </div>
-
+ 
                 <button class="btn-submit" onclick="window.submitConfiguration()">Ajouter au référentiel</button>
             </div>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE DIFFUSION ===================== -->
     <div class="modal" id="modal-broadcast">
         <div class="modal-content">
@@ -595,7 +928,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- ===================== MODALE MOT DE PASSE ===================== -->
     <div class="modal" id="modal-password">
         <div class="modal-content">
@@ -616,14 +949,14 @@
             </div>
         </div>
     </div>
-
+ 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import {
             getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs,
             updateDoc, serverTimestamp, onSnapshot, query, orderBy, limit
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+ 
         // Configuration officielle Azzera Protect
         const firebaseConfig = {
             apiKey: "AIzaSyDitqUSpKc_xJuMgvVqz7JfrCk9dhO963E",
@@ -635,7 +968,7 @@
             appId: "1:552058799743:web:215ffb05f1028b5e05214a",
             measurementId: "G-N4VHL7ZEHW"
         };
-
+ 
         let app, db;
         try {
             app = initializeApp(firebaseConfig);
@@ -644,7 +977,7 @@
         } catch (error) {
             console.error("Erreur de connexion Firebase :", error);
         }
-
+ 
         /* ==================== ÉTAT GLOBAL ==================== */
         const CATEGORY_META = {
             'Début de ronde': { critical: false },
@@ -655,10 +988,11 @@
             'Intrusion': { critical: true },
             'Autre': { critical: false }
         };
-
+ 
         let currentUsername = null;
         let currentUserData = null;
         let currentRole = null;
+        let currentMissionId = null;
         let sessionStartTime = Date.now();
         let agentServiceActive = false;
         let pendingPhotoBase64 = null;
@@ -666,10 +1000,12 @@
         let unsubBroadcast = null;
         let unsubAgentsList = null;
         let unsubReports = null;
+        let unsubMissions = null;
         let sitesCache = [];
         let agentsCache = [];
         let reportsCache = [];
-
+        let missionsCache = [];
+ 
         /* ==================== UTILITAIRES ==================== */
         function toast(msg, isError) {
             const host = document.getElementById('toast-host');
@@ -679,17 +1015,17 @@
             host.appendChild(el);
             setTimeout(() => el.remove(), 3800);
         }
-
+ 
         function todayStr() { return new Date().toISOString().slice(0, 10); }
         function monthStr() { return new Date().toISOString().slice(0, 7); }
-
+ 
         function formatMinutes(mins) {
             mins = Math.max(0, Math.round(mins));
             const h = Math.floor(mins / 60);
             const m = mins % 60;
             return h + 'h' + String(m).padStart(2, '0');
         }
-
+ 
         function liveMinutesForAgent(data) {
             const today = todayStr();
             const month = monthStr();
@@ -702,7 +1038,7 @@
             }
             return { mToday, mMonth };
         }
-
+ 
         function timeAgo(date) {
             if (!date) return 'jamais';
             const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
@@ -711,7 +1047,7 @@
             const h = Math.floor(diffMin / 60);
             return `il y a ${h}h${String(diffMin % 60).padStart(2, '0')}`;
         }
-
+ 
         function updateClocks() {
             const str = new Date().toLocaleTimeString('fr-FR');
             const a = document.getElementById('clock-agent');
@@ -721,7 +1057,7 @@
         }
         setInterval(updateClocks, 1000);
         updateClocks();
-
+ 
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -744,7 +1080,7 @@
                 reader.readAsDataURL(file);
             });
         }
-
+ 
         function getOneShotPosition() {
             return new Promise((resolve) => {
                 if (!('geolocation' in navigator)) return resolve(null);
@@ -755,7 +1091,7 @@
                 );
             });
         }
-
+ 
         /* ==================== SEED PAR DÉFAUT ==================== */
         async function seedDefaultsIfNeeded() {
             if (!db) return;
@@ -779,17 +1115,17 @@
                 console.error('Seed impossible (vérifier les règles Firestore) :', e);
             }
         }
-
+ 
         /* ==================== NAVIGATION / SESSION ==================== */
         window.showView = function (viewId) {
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
         };
-
+ 
         document.getElementById('input-password').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') window.processLogin();
         });
-
+ 
         window.processLogin = async function () {
             const errEl = document.getElementById('login-error');
             errEl.innerText = '';
@@ -797,7 +1133,7 @@
             const pass = document.getElementById('input-password').value;
             if (!user || !pass) { errEl.innerText = 'Veuillez renseigner identifiant et mot de passe.'; return; }
             if (!db) { errEl.innerText = 'Connexion au serveur impossible.'; return; }
-
+ 
             const btn = document.getElementById('btn-login');
             btn.disabled = true; btn.innerText = 'Vérification...';
             try {
@@ -818,7 +1154,7 @@
                 currentUserData = data;
                 currentRole = data.role;
                 sessionStartTime = Date.now();
-
+ 
                 if (data.role === 'agent') {
                     enterAgentSession();
                 } else {
@@ -830,20 +1166,21 @@
             }
             btn.disabled = false; btn.innerText = 'Authentification';
         };
-
+ 
         window.triggerLogout = function () {
             if (unsubOwnUser) unsubOwnUser();
             if (unsubBroadcast) unsubBroadcast();
             if (unsubAgentsList) unsubAgentsList();
             if (unsubReports) unsubReports();
+            if (unsubMissions) unsubMissions();
             stopGeoSharing();
             document.getElementById('input-username').value = '';
             document.getElementById('input-password').value = '';
-            currentUsername = null; currentUserData = null; currentRole = null;
+            currentUsername = null; currentUserData = null; currentRole = null; currentMissionId = null;
             agentServiceActive = false;
             window.showView('view-login');
         };
-
+ 
         /* ==================== SESSION AGENT ==================== */
         function enterAgentSession() {
             document.getElementById('agent-display-name').innerText = (currentUserData.fullName || currentUsername).toUpperCase();
@@ -854,7 +1191,7 @@
             listenConsignes();
             refreshNfcHint();
         }
-
+ 
         function refreshNfcHint() {
             const hint = document.getElementById('agent-nfc-hint');
             if ('NDEFReader' in window) {
@@ -863,7 +1200,7 @@
                 hint.innerText = 'NFC non disponible sur cet appareil : validation manuelle activée.';
             }
         }
-
+ 
         function listenOwnUser() {
             unsubOwnUser = onSnapshot(doc(db, 'users', currentUsername), (snap) => {
                 if (!snap.exists()) return;
@@ -875,7 +1212,13 @@
                 }
                 currentUserData = data;
                 agentServiceActive = !!data.active;
+                if (data.currentMissionId) currentMissionId = data.currentMissionId;
                 renderAgentServiceUI();
+                // Reprise de session : si l'agent était déjà en service (ex: page rechargée)
+                // et que le partage GPS n'a pas encore été (re)lancé, on le relance.
+                if (agentServiceActive && geoWatchId === null && geoFallbackIntervalId === null) {
+                    startGeoSharing();
+                }
                 document.getElementById('agent-site-name').innerText = data.site || 'Non assigné';
                 const { mToday, mMonth } = liveMinutesForAgent(data);
                 document.getElementById('agent-hours-today').innerText = formatMinutes(mToday);
@@ -889,7 +1232,7 @@
                 document.getElementById('agent-hours-month').innerText = formatMinutes(mMonth);
             }
         }, 30000);
-
+ 
         function renderAgentServiceUI() {
             const btn = document.getElementById('btn-agent-service');
             const badge = document.getElementById('agent-status-badge');
@@ -912,7 +1255,7 @@
                 sos.disabled = true;
             }
         }
-
+ 
         /* ==================== POINTAGE NFC ==================== */
         window.toggleAgentService = async function () {
             if ("vibrate" in navigator) navigator.vibrate(30);
@@ -924,7 +1267,7 @@
                 }
             }
         };
-
+ 
         async function startClockInFlow() {
             if ('NDEFReader' in window) {
                 document.getElementById('nfc-pulse-wrap').classList.add('show');
@@ -952,19 +1295,31 @@
                 }
             }
         }
-
+ 
         function cancelNfcUI() {
             document.getElementById('nfc-pulse-wrap').classList.remove('show');
             document.getElementById('agent-service-btn-wrap').style.display = 'block';
         }
         window.cancelNfcScan = function () { cancelNfcUI(); };
-
+ 
         async function finalizeClockIn(tagId) {
             agentServiceActive = true;
             renderAgentServiceUI();
+            const missionId = (currentUsername || 'mission') + '-' + Date.now();
+            currentMissionId = missionId;
             try {
                 await updateDoc(doc(db, 'users', currentUsername), {
-                    active: true, lastClockIn: serverTimestamp()
+                    active: true, lastClockIn: serverTimestamp(), currentMissionId: missionId
+                });
+                await setDoc(doc(db, 'missions', missionId), {
+                    missionId: missionId,
+                    agent: (currentUserData && currentUserData.fullName) || currentUsername,
+                    agentUsername: currentUsername,
+                    site: (currentUserData && currentUserData.site) || null,
+                    startedAt: serverTimestamp(),
+                    endedAt: null,
+                    status: 'en_cours',
+                    clockInMethod: tagId ? 'nfc' : 'manuel'
                 });
                 await saveEventToFirebase('SYSTÈME',
                     'Prise de poste' + (tagId ? ' (badge NFC scanné)' : ' (validation manuelle)') + ' : ' + (currentUserData.site || ''),
@@ -976,7 +1331,7 @@
                 toast('Erreur lors de la prise de poste.', true);
             }
         }
-
+ 
         async function doClockOut() {
             try {
                 const snap = await getDoc(doc(db, 'users', currentUsername));
@@ -988,13 +1343,19 @@
                 const lastIn = data.lastClockIn && data.lastClockIn.toDate ? data.lastClockIn.toDate() : new Date();
                 const diff = Math.max(0, Math.round((Date.now() - lastIn.getTime()) / 60000));
                 mToday += diff; mMonth += diff;
-
+                const missionId = data.currentMissionId || currentMissionId;
+ 
                 await updateDoc(doc(db, 'users', currentUsername), {
                     active: false, lastClockOut: serverTimestamp(),
                     minutesToday: mToday, minutesMonth: mMonth,
                     lastResetDay: today, lastResetMonth: month,
-                    lat: null, lng: null
+                    lat: null, lng: null, currentMissionId: null
                 });
+                if (missionId) {
+                    await setDoc(doc(db, 'missions', missionId), {
+                        endedAt: serverTimestamp(), status: 'terminee', durationMinutes: diff
+                    }, { merge: true });
+                }
                 await saveEventToFirebase('SYSTÈME', 'Fin de vacation : ' + (currentUserData.site || ''), false);
                 stopGeoSharing();
                 agentServiceActive = false;
@@ -1005,32 +1366,98 @@
                 toast('Erreur lors de la clôture.', true);
             }
         }
-
+ 
         /* ==================== PARTAGE GPS ==================== */
-        let geoWatchId = null, geoIntervalId = null, lastCoords = null;
+        let geoWatchId = null, geoIntervalId = null, geoFallbackIntervalId = null, lastCoords = null, geoStatus = 'idle';
+ 
+        function setGeoStatus(status) {
+            // status: 'idle' | 'active' | 'denied' | 'error'
+            geoStatus = status;
+            const badge = document.getElementById('geo-status-badge');
+            if (!badge) return;
+            if (status === 'active') {
+                badge.style.display = 'inline-block';
+                badge.className = 'badge badge-green badge-sm';
+                badge.innerText = 'GPS OK';
+            } else if (status === 'denied') {
+                badge.style.display = 'inline-block';
+                badge.className = 'badge badge-red badge-sm';
+                badge.innerText = 'GPS REFUSÉ';
+            } else if (status === 'error') {
+                badge.style.display = 'inline-block';
+                badge.className = 'badge badge-orange badge-sm';
+                badge.innerText = 'GPS INSTABLE';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+ 
         function startGeoSharing() {
-            if (!('geolocation' in navigator)) return;
-            geoWatchId = navigator.geolocation.watchPosition(
-                (pos) => { lastCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
-                () => {},
-                { enableHighAccuracy: true, maximumAge: 20000 }
-            );
-            pushGeo();
+            if (!('geolocation' in navigator)) {
+                toast('Géolocalisation non disponible sur cet appareil.', true);
+                setGeoStatus('error');
+                return;
+            }
+            requestGeoPermissionThenWatch();
+            // Filet de sécurité : si watchPosition ne déclenche aucune position après 15s
+            // (cas fréquent sur certains Android/iOS en arrière-plan), on bascule en mode
+            // sondage périodique via getCurrentPosition pour ne jamais rester sans position.
+            geoFallbackIntervalId = setInterval(() => {
+                if (!lastCoords && agentServiceActive) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            lastCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                            setGeoStatus('active');
+                            pushGeo();
+                        },
+                        (err) => handleGeoError(err),
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                    );
+                }
+            }, 20000);
             geoIntervalId = setInterval(pushGeo, 45000);
         }
+ 
+        function requestGeoPermissionThenWatch() {
+            geoWatchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    lastCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setGeoStatus('active');
+                    pushGeo();
+                },
+                (err) => handleGeoError(err),
+                { enableHighAccuracy: true, maximumAge: 20000, timeout: 15000 }
+            );
+        }
+ 
+        function handleGeoError(err) {
+            console.error('Erreur géolocalisation :', err && err.message);
+            if (err && err.code === 1) {
+                // PERMISSION_DENIED
+                setGeoStatus('denied');
+                toast('Localisation refusée : autorisez l\'accès à la position dans les réglages de votre navigateur/téléphone pour être visible sur la carte.', true);
+            } else {
+                // POSITION_UNAVAILABLE ou TIMEOUT : on retente automatiquement, ce n'est
+                // pas forcément définitif (GPS froid, intérieur de bâtiment, etc.)
+                setGeoStatus('error');
+            }
+        }
+ 
         function pushGeo() {
             if (lastCoords && currentUsername) {
                 updateDoc(doc(db, 'users', currentUsername), {
                     lat: lastCoords.lat, lng: lastCoords.lng, lastSeen: serverTimestamp()
-                }).catch(() => {});
+                }).catch((e) => console.error('Erreur envoi position :', e));
             }
         }
         function stopGeoSharing() {
             if (geoWatchId !== null) navigator.geolocation.clearWatch(geoWatchId);
             if (geoIntervalId) clearInterval(geoIntervalId);
-            geoWatchId = null; geoIntervalId = null; lastCoords = null;
+            if (geoFallbackIntervalId) clearInterval(geoFallbackIntervalId);
+            geoWatchId = null; geoIntervalId = null; geoFallbackIntervalId = null; lastCoords = null;
+            setGeoStatus('idle');
         }
-
+ 
         /* ==================== SOS ==================== */
         window.triggerCriticalSOS = async function () {
             if ("vibrate" in navigator) navigator.vibrate([500, 250, 500, 250, 500]);
@@ -1038,7 +1465,7 @@
             await saveEventToFirebase('URGENCE', 'ALERTE PTI DÉCLENCHÉE PAR L\'AGENT', true, pos);
             toast('ALERTE SOS TRANSMISE AU SERVEUR.');
         };
-
+ 
         /* ==================== MAIN COURANTE : SAISIE ==================== */
         window.openAgentReportModal = function () {
             document.getElementById('report-text').value = '';
@@ -1050,9 +1477,10 @@
             document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
             firstPill.classList.add('active');
             document.getElementById('report-urgent-toggle').checked = false;
+            updateReportTextHint(firstPill.innerText.replace(/^\S+\s/, '').trim());
             document.getElementById('modal-report').style.display = 'flex';
         };
-
+ 
         window.handlePhotoSelect = async function (event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1067,18 +1495,31 @@
                 toast('Impossible de traiter cette image.', true);
             }
         };
-
+ 
         window.openInstructionModal = function () {
             document.getElementById('modal-instructions').style.display = 'flex';
         };
-
+ 
         window.selectCategory = function (element) {
             document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
             element.classList.add('active');
             const isCrit = element.dataset.crit === '1';
             document.getElementById('report-urgent-toggle').checked = isCrit;
+            updateReportTextHint(element.innerText.replace(/^\S+\s/, '').trim());
         };
-
+ 
+        function updateReportTextHint(category) {
+            const label = document.getElementById('report-text-label');
+            const textarea = document.getElementById('report-text');
+            if (category === 'Début de ronde' || category === 'Fin de ronde') {
+                label.innerText = 'Description des faits (optionnel)';
+                textarea.placeholder = 'RAS par défaut. Précisez ici toute observation utile.';
+            } else {
+                label.innerText = 'Description des faits';
+                textarea.placeholder = 'Rédiger le compte-rendu...';
+            }
+        }
+ 
         window.openAgentHistoryModal = async function () {
             const container = document.getElementById('agent-history-container');
             container.innerHTML = '<div class="empty-state">Chargement...</div>';
@@ -1100,7 +1541,7 @@
                 container.innerHTML = '<div class="empty-state">Erreur de chargement.</div>';
             }
         };
-
+ 
         /* ==================== FIREBASE : ÉVÉNEMENTS ==================== */
         async function saveEventToFirebase(category, text, isCritical, position, photoBase64) {
             if (!db) return;
@@ -1114,6 +1555,7 @@
                     lat: position ? position.lat : null,
                     lng: position ? position.lng : null,
                     photo: photoBase64 || null,
+                    missionId: currentMissionId || null,
                     timestamp: serverTimestamp()
                 });
             } catch (error) {
@@ -1121,27 +1563,38 @@
                 toast('Erreur de transmission au serveur.', true);
             }
         }
-
+ 
         window.submitReportToFirebase = async function () {
             const text = document.getElementById('report-text').value.trim();
             const activeCatEl = document.querySelector('.category-pill.active');
             const activeCat = activeCatEl.innerText.replace(/^\S+\s/, '').trim();
             const urgent = document.getElementById('report-urgent-toggle').checked;
-
-            if (!text) { toast('Le compte-rendu ne peut être vide.', true); return; }
-
+ 
+            // Pour Début/Fin de ronde, la description est optionnelle : un texte
+            // standard est généré automatiquement si l'agent ne saisit rien.
+            const noDescriptionNeeded = (activeCat === 'Début de ronde' || activeCat === 'Fin de ronde');
+            let finalText = text;
+            if (!finalText) {
+                if (noDescriptionNeeded) {
+                    finalText = activeCat + ' — ' + (currentUserData.site || 'site assigné') + ' (RAS)';
+                } else {
+                    toast('Le compte-rendu ne peut être vide.', true);
+                    return;
+                }
+            }
+ 
             const btn = document.getElementById('btn-submit-report');
             btn.innerText = 'Transmission...'; btn.disabled = true;
-
+ 
             const pos = await getOneShotPosition();
-            await saveEventToFirebase(activeCat, text, urgent, pos, pendingPhotoBase64);
-
+            await saveEventToFirebase(activeCat, finalText, urgent, pos, pendingPhotoBase64);
+ 
             btn.innerText = 'Envoyer au serveur'; btn.disabled = false;
             window.closeModal('modal-report');
             if ("vibrate" in navigator) navigator.vibrate(50);
             toast('Main courante transmise.');
         };
-
+ 
         /* ==================== CONSIGNES ==================== */
         function listenConsignes() {
             onSnapshot(doc(db, 'settings', 'consignes'), (snap) => {
@@ -1182,7 +1635,7 @@
                 toast('Erreur lors de la sauvegarde.', true);
             }
         };
-
+ 
         /* ==================== DIFFUSION (BROADCAST) ==================== */
         function listenBroadcasts() {
             const q = query(collection(db, 'broadcasts'), orderBy('timestamp', 'desc'), limit(1));
@@ -1216,7 +1669,7 @@
                 toast('Erreur lors de la diffusion.', true);
             }
         };
-
+ 
         /* ==================== MOT DE PASSE ==================== */
         window.openPasswordModal = function () {
             document.getElementById('pwd-current').value = '';
@@ -1237,7 +1690,7 @@
                 toast('Erreur lors de la mise à jour.', true);
             }
         };
-
+ 
         /* ==================== SESSION AZZERA (QG) ==================== */
         function enterBossSession() {
             window.showView('view-boss');
@@ -1245,9 +1698,10 @@
             loadSitesForSelect();
             listenAgentsList();
             listenReports();
+            listenMissions();
             listenConsignes();
         }
-
+ 
         /* --- Carte temps réel --- */
         let bossMap = null;
         let mapMarkers = {};
@@ -1282,7 +1736,7 @@
             if (m && bossMap) { bossMap.setView(m.getLatLng(), 15); m.openPopup(); }
             else toast('Position non disponible pour cet agent.', true);
         };
-
+ 
         /* --- Sites --- */
         async function loadSitesForSelect() {
             try {
@@ -1305,7 +1759,7 @@
                 }
             } catch (e) { console.error(e); }
         }
-
+ 
         /* --- Liste agents + métriques --- */
         function listenAgentsList() {
             const q = query(collection(db, 'users'));
@@ -1319,23 +1773,28 @@
             });
         }
         setInterval(() => { if (currentRole === 'boss') renderBossDashboard(); }, 30000);
-
+ 
         function renderBossDashboard() {
             const activeAgents = agentsCache.filter(a => a.active);
             document.getElementById('count-active-agents').innerText = activeAgents.length;
             document.getElementById('count-active-sites').innerText = new Set(activeAgents.map(a => a.site)).size;
-
-            let totalMin = 0;
-            agentsCache.forEach(a => { totalMin += liveMinutesForAgent(a).mToday; });
+ 
+            let totalMin = 0, totalMonthMin = 0;
+            agentsCache.forEach(a => {
+                const { mToday, mMonth } = liveMinutesForAgent(a);
+                totalMin += mToday;
+                totalMonthMin += mMonth;
+            });
             document.getElementById('total-hours-today').innerText = formatMinutes(totalMin);
-
+            document.getElementById('total-hours-month').innerText = formatMinutes(totalMonthMin);
+ 
             const list = document.getElementById('boss-agents-list');
             if (agentsCache.length === 0) {
                 list.innerHTML = '<div class="empty-state">Aucun agent enregistré. Ajoutez votre premier agent ci-dessous.</div>';
             } else {
                 list.innerHTML = '';
                 agentsCache.forEach((a) => {
-                    const { mToday } = liveMinutesForAgent(a);
+                    const { mToday, mMonth } = liveMinutesForAgent(a);
                     const lastSeen = a.lastSeen && a.lastSeen.toDate ? timeAgo(a.lastSeen.toDate()) : 'jamais connecté';
                     const row = document.createElement('div');
                     row.className = 'list-row';
@@ -1344,7 +1803,7 @@
                             <h4>${(a.fullName || a.username).toUpperCase()}
                                 <span class="badge badge-sm ${a.active ? 'badge-green' : (a.disabled ? 'badge-red' : 'badge-grey')}">${a.active ? 'ACTIF' : (a.disabled ? 'DÉSACTIVÉ' : 'REPOS')}</span>
                             </h4>
-                            <p>${(a.site || 'SITE NON ASSIGNÉ').toUpperCase()} • ${formatMinutes(mToday)} aujourd'hui • ${lastSeen}</p>
+                            <p>${(a.site || 'SITE NON ASSIGNÉ').toUpperCase()} • ${formatMinutes(mToday)} aujourd'hui • ${formatMinutes(mMonth)} ce mois • ${lastSeen}</p>
                         </div>
                         <div class="list-row-actions">
                             <button class="btn-action-icon" style="color: var(--azur);" onclick="window.panMapTo('${a.username}')">📍</button>
@@ -1356,7 +1815,7 @@
                 });
             }
         }
-
+ 
         window.resetAgentPassword = async function (username) {
             const newPass = prompt('Nouveau mot de passe pour ' + username + ' :');
             if (!newPass) return;
@@ -1365,7 +1824,7 @@
                 toast('Mot de passe réinitialisé pour ' + username + '.');
             } catch (e) { toast('Erreur lors de la réinitialisation.', true); }
         };
-
+ 
         window.toggleAgentDisabled = async function (username, currentlyDisabled) {
             const verb = currentlyDisabled ? 'réactiver' : 'désactiver';
             if (!confirm('Confirmer : ' + verb + ' le compte de ' + username + ' ?')) return;
@@ -1374,7 +1833,7 @@
                 toast('Compte ' + (currentlyDisabled ? 'réactivé' : 'désactivé') + '.');
             } catch (e) { toast('Erreur lors de l\'opération.', true); }
         };
-
+ 
         /* --- Journal des événements --- */
         function buildLogEntry(data) {
             const entry = document.createElement('div');
@@ -1403,14 +1862,14 @@
             }
             return entry;
         }
-
+ 
         function listenReports() {
             const container = document.getElementById('live-log-container');
             const q = query(collection(db, 'mains_courantes'), orderBy('timestamp', 'desc'), limit(100));
             unsubReports = onSnapshot(q, (snapshot) => {
                 reportsCache = [];
                 snapshot.forEach((d) => reportsCache.push(d.data()));
-
+ 
                 let alertCount = 0;
                 const now = Date.now();
                 reportsCache.forEach((data) => {
@@ -1422,7 +1881,7 @@
                 document.getElementById('count-alerts').innerText = alertCount;
                 document.getElementById('metric-incident-box').style.borderColor =
                     alertCount > 0 ? 'var(--alert-red)' : 'var(--border-color)';
-
+ 
                 window.renderFilteredReports();
                 if (container.dataset.firstLoad !== 'done') {
                     container.dataset.firstLoad = 'done';
@@ -1437,7 +1896,97 @@
                 Notification.requestPermission().catch(() => {});
             }
         }
-
+ 
+        /* --- Missions (regroupement par prise de poste) --- */
+        function listenMissions() {
+            const container = document.getElementById('missions-list-container');
+            const q = query(collection(db, 'missions'), orderBy('startedAt', 'desc'), limit(100));
+            unsubMissions = onSnapshot(q, (snapshot) => {
+                missionsCache = [];
+                snapshot.forEach((d) => missionsCache.push({ id: d.id, ...d.data() }));
+                document.getElementById('total-missions-month').innerText = missionsCache.filter((m) => {
+                    if (!m.startedAt || !m.startedAt.toDate) return false;
+                    return m.startedAt.toDate().toISOString().slice(0, 7) === monthStr();
+                }).length;
+                window.renderFilteredMissions();
+            }, () => {
+                container.innerHTML = '<div class="empty-state">Erreur de chargement des missions.</div>';
+            });
+        }
+ 
+        function buildMissionRow(m) {
+            const row = document.createElement('div');
+            row.className = 'list-row';
+            row.style.cursor = 'pointer';
+            row.onclick = () => window.openMissionDetail(m.id);
+            const started = m.startedAt && m.startedAt.toDate ? m.startedAt.toDate().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'en cours...';
+            const ended = m.endedAt && m.endedAt.toDate ? m.endedAt.toDate().toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
+            const statusBadge = m.status === 'en_cours' ? '<span class="badge badge-sm badge-green">EN COURS</span>' : '<span class="badge badge-sm badge-grey">TERMINÉE</span>';
+            row.innerHTML = `
+                <div class="list-row-info">
+                    <h4>${(m.agent || '—').toUpperCase()} ${statusBadge}</h4>
+                    <p>${(m.site || 'SITE NON ASSIGNÉ').toUpperCase()} • Début ${started}${ended ? ' • Fin ' + ended : ''}</p>
+                </div>
+                <div class="list-row-actions">
+                    <button class="btn-action-icon" style="color: var(--azur);">📄</button>
+                </div>`;
+            return row;
+        }
+ 
+        window.renderFilteredMissions = function () {
+            const search = (document.getElementById('mission-filter-search').value || '').toLowerCase();
+            const status = document.getElementById('mission-filter-status').value;
+            const container = document.getElementById('missions-list-container');
+            container.innerHTML = '';
+            const filtered = missionsCache.filter((m) => {
+                if (status && m.status !== status) return false;
+                if (search) {
+                    const hay = ((m.agent || '') + ' ' + (m.site || '')).toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">Aucune mission ne correspond.</div>';
+                return;
+            }
+            filtered.forEach((m) => container.appendChild(buildMissionRow(m)));
+        };
+ 
+        window.openMissionDetail = async function (missionId) {
+            const m = missionsCache.find((x) => x.id === missionId);
+            if (!m) return;
+            const titleEl = document.getElementById('mission-detail-title');
+            const summaryEl = document.getElementById('mission-detail-summary');
+            const container = document.getElementById('mission-detail-container');
+            titleEl.innerText = 'MISSION — ' + (m.agent || '').toUpperCase();
+            const started = m.startedAt && m.startedAt.toDate ? m.startedAt.toDate().toLocaleString('fr-FR') : 'en cours...';
+            const ended = m.endedAt && m.endedAt.toDate ? m.endedAt.toDate().toLocaleString('fr-FR') : 'Mission en cours';
+            summaryEl.innerHTML = `
+                <p style="font-size:12px;margin-bottom:6px;"><strong>Site :</strong> ${(m.site || 'Non assigné')}</p>
+                <p style="font-size:12px;margin-bottom:6px;"><strong>Début :</strong> ${started}</p>
+                <p style="font-size:12px;">${m.endedAt ? '<strong>Fin :</strong> ' + ended : '<span style="color:var(--status-green);font-weight:700;">EN COURS</span>'}</p>
+            `;
+            container.innerHTML = '<div class="empty-state">Chargement...</div>';
+            document.getElementById('modal-mission-detail').style.display = 'flex';
+            try {
+                const q = query(collection(db, 'mains_courantes'), orderBy('timestamp', 'asc'), limit(500));
+                const snap = await getDocs(q);
+                container.innerHTML = '';
+                let count = 0;
+                snap.forEach((d) => {
+                    const data = d.data();
+                    if (data.missionId !== missionId) return;
+                    count++;
+                    container.appendChild(buildLogEntry(data));
+                });
+                if (count === 0) container.innerHTML = '<div class="empty-state">Aucune main courante pour cette mission.</div>';
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="empty-state">Erreur de chargement.</div>';
+            }
+        };
+ 
         window.renderFilteredReports = function () {
             const search = (document.getElementById('filter-search').value || '').toLowerCase();
             const cat = document.getElementById('filter-category').value;
@@ -1457,7 +2006,7 @@
             }
             filtered.forEach((data) => container.appendChild(buildLogEntry(data)));
         };
-
+ 
         window.exportReportsCSV = function () {
             if (reportsCache.length === 0) { toast('Aucune donnée à exporter.', true); return; }
             const rows = [['Date', 'Agent', 'Site', 'Catégorie', 'Urgent', 'Texte']];
@@ -1473,7 +2022,7 @@
             document.body.appendChild(a); a.click(); a.remove();
             URL.revokeObjectURL(url);
         };
-
+ 
         function playAlertSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1486,7 +2035,7 @@
                 setTimeout(() => { osc.stop(); ctx.close(); }, 500);
             } catch (e) {}
         }
-
+ 
         /* ==================== AJOUT AGENT / SITE ==================== */
         let currentConfigMode = '';
         window.openConfigModal = function (mode) {
@@ -1505,7 +2054,7 @@
             if (mode === 'Agent') loadSitesForSelect();
             document.getElementById('modal-config').style.display = 'flex';
         };
-
+ 
         window.useMyLocationForSite = async function () {
             const pos = await getOneShotPosition();
             if (!pos) { toast('Position indisponible.', true); return; }
@@ -1513,11 +2062,11 @@
             document.getElementById('config-input-lng').value = pos.lng.toFixed(5);
             toast('Position actuelle renseignée.');
         };
-
+ 
         window.submitConfiguration = async function () {
             const name = document.getElementById('config-input-name').value.trim();
             if (!name) { toast('Veuillez remplir le nom.', true); return; }
-
+ 
             if (currentConfigMode === 'Agent') {
                 const username = document.getElementById('config-input-username').value.trim().toLowerCase();
                 const password = document.getElementById('config-input-password').value.trim();
@@ -1547,12 +2096,12 @@
             }
             window.closeModal('modal-config');
         };
-
+ 
         /* ==================== MODALES GÉNÉRALES ==================== */
         window.closeModal = function (id) {
             document.getElementById(id).style.display = 'none';
         };
-
+ 
         /* ==================== DÉMARRAGE ==================== */
         seedDefaultsIfNeeded().finally(() => {
             const status = document.getElementById('login-status');
@@ -1561,3 +2110,4 @@
     </script>
 </body>
 </html>
+
